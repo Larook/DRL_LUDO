@@ -60,7 +60,32 @@ def get_game_state(pieces):
     I think it is player-specific because max index of each pawn is 59
     we have to somehow unify this, so the states of other players are mapped to the player0 - there is 13 tiles difference between each base
     
-    enemy positions cant exceed 52 -> if >52 then next one is 1
+    enemy positions cant exceed 52 -> if >52 then next one is 1 WORKS
+            
+            round = 6 	state = 0|0|30-|0|
+            round = 7 	state = 0|0|30-|0|
+            found enemy[1] pawn = 41 near player_0[2] = 38
+            found enemy[2] pawn = 40 near player_0[2] = 38
+            round = 7 	state = 0|0|38-41,40,|0|
+            found enemy[1] pawn = 42 near player_0[2] = 38
+            found enemy[2] pawn = 40 near player_0[2] = 38
+            round = 7 	state = 0|0|38-42,40,|0|
+            found enemy[1] pawn = 42 near player_0[2] = 38
+            found enemy[2] pawn = 41 near player_0[2] = 38
+            round = 7 	state = 0|0|38-42,41,|0|
+            found enemy[1] pawn = 42 near player_0[2] = 38
+            found enemy[2] pawn = 41 near player_0[2] = 38
+            round = 8 	state = 0|0|38-42,41,|0|                <- here enemy at 41
+            found enemy[1] pawn = 42 near player_0[2] = 41
+            round = 8 	state = 0|0|41-42,|0|
+            found enemy[1] pawn = 42 near player_0[2] = 41
+            round = 8 	state = 0|0|41-42,|0|                   <- here enemy dead
+            round = 8 	state = 0|0|41-|0|
+            round = 8 	state = 0|0|41-|0|
+            round = 9 	state = 0|0|41-|0|
+            
+            In general it works but cant print when somebody was struck out!
+        
     """
     distance_between_players = 13
 
@@ -78,22 +103,22 @@ def get_game_state(pieces):
                     # now we have all enemy pawns
                     #TODO we have to check if they are nearby any our pawn - we have to compare them with all my pawns
                     enemy_pawn_now = players[i_player][i_pawn]
-                    if enemy_pawn_now in range(my_pawn - fields_horizon, my_pawn + fields_horizon):
-                        if enemy_pawn_now != 0:
+                    if enemy_pawn_now != 0:
 
-                            # map enemy position to player_0 position - WORKS
-                            enemy_pawn_now += i_player * distance_between_players
-                            if enemy_pawn_now > 53:
-                                enemy_pawn_now -= 53
+                        # map enemy position to player_0 position - WORKS
+                        enemy_pawn_now += i_player * distance_between_players
+                        if enemy_pawn_now > 53:
+                            enemy_pawn_now -= 53
 
+                        if enemy_pawn_now in range(my_pawn - fields_horizon, my_pawn + fields_horizon):
                             state += str(enemy_pawn_now) + ","
                             print("found enemy[%d] pawn = %d near player_0[%d] = %d" % (i_player, enemy_pawn_now, my_pid, my_pawn))
                             if my_pawn == enemy_pawn_now:
-                                print("Someone should die")
+                                print("Someone should die") # 37, 40, 19
                             # print("pieces[i_player][i_pawn] = ", players[i_player][i_pawn])
-                        else:
+                        # else:
                             # state += str(my_pawn) + "?"
-                            pass
+                            # pass
 
             state += "|"
     # print("state now = ", state)
