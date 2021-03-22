@@ -55,3 +55,23 @@ But for all of that we will need to decode the state - from string again to arra
 but definiately function will be needed
 
 #### OK the furthest one is working!
+
+## Try 4 x 59 + 4 state representation from papers
+The first 59 variables represent the current player’s board positions.
+Each variable is a number between 0  and 1 (inclusive) that represents the percentage of the player’s pieces that are
+in that position.
+For example, if the current player has 3 of the 4 pieces in position 5, the variable corresponding to this position 
+has a value of 0.75.
+
+• The next 59 variables represent the next player’s board
+positions, and so on to account for all 4 players.
+
+• The first variable for each of the 4 players corresponds
+to the HOME position. The initial value of this variable is
+1 for all players. The last variable for each player corresponds to the GOAL position.
+A player wins when this variable becomes 1.
+
+OK this state is working
+Try to do the "furthest moves" strategy - WORKS
+
+Now try to do actual Q-learning. And maybe clean up the code
