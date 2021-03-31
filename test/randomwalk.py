@@ -181,6 +181,15 @@ def choose_action_furthest_pawn_paper(state, pieces, move_pieces):
         return move_pieces[np.random.randint(0, len(move_pieces))]
 
 
+def get_policy_action_ann(state_papers_start):
+    """
+    DQN network to select the action of optimal policy
+    :param state_papers_start:
+    :return:
+    """
+    pass
+
+
 def playground_1():
     import ludopy
     import numpy as np
@@ -201,13 +210,16 @@ def playground_1():
 
         if len(move_pieces):
             # piece_to_move = move_pieces[0]  # move only 1 piece
-            # piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]
-            # piece_to_move = choose_action_furthest_pawn_own(state_own_start, move_pieces)
-            piece_to_move = choose_action_furthest_pawn_paper(state_papers_start, pieces, move_pieces)
+            # piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
+            # piece_to_move = choose_action_furthest_pawn_own(state_own_start, move_pieces)  # go one piece always with old state
+            piece_to_move = choose_action_furthest_pawn_paper(state_papers_start, pieces, move_pieces)  # select furthest pawn
+
+            # TODO: piece_to_move is action!
+            piece_to_move = get_policy_action_ann(state_papers_start)
         else:
             piece_to_move = -1
 
-        # TODO: Ok so we have to choose a piece to move and see the value we are getting
+        # Ok so we have to choose a piece to move and see the value we are getting
         # see how the states are saved
         # want to save position of every piece, and if we can then the surroundings of it -> g.get_pieces
 

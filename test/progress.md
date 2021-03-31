@@ -74,4 +74,67 @@ A player wins when this variable becomes 1.
 OK this state is working
 Try to do the "furthest moves" strategy - WORKS
 
-Now try to do actual Q-learning. And maybe clean up the code
+Now try to do actual Q-learning. And maybe clean up the code.
+
+## saving actions
+"Every action is represented as a tuple (x0/58, xf/58) where x0 is initial position and xf is the final position.
+Dividing by 58 is necessary to obtain a value between 0 and 1."
+
+Is it necessary though?
+
+    action = (x0, xf). 
+
+We should see all the possible actions and choose the one with the highest value.
+After selecting an action, the id of pawn should be returned.
+
+How to return the id of pawn after choosing an action saved as that?
+
+    state_before = [player0, player1, player2, player3]
+    state_after_a0, value_0 = get_Q(state_before, action=pawn_id0)  
+    state_after_a1, value_1 = get_Q(state_before, action=pawn_id1)  
+    state_after_a2, value_2 = get_Q(state_before, action=pawn_id2)  
+    state_after_a3, value_3 = get_Q(state_before, action=pawn_id3)
+
+then select the best action based on values - why then save actions as tuple?
+
+## saving reward
+get_reward(state)
+
+    • 1.0 for winning a game.
+    • 0.25 for releasing a piece from JAIL.
+    • 0.2 for defending a vulnerable piece.
+    • 0.15 for knocking an opponent’s piece.
+    • 0.1 for moving the piece that is closest to home.
+    • 0.05 for forming a blockade.
+    • -0.25 for getting a piece knocked in the next turn.
+    • -1.0 for losing a game.
+    Rewards can be accumu
+
+## state, action, reward in transition (input to ANN)
+
+Just to be able to save it in format applicable by the neural network. We need transition
+
+    Transition - named tuple representing a single transition on environment. Maps (state, action) pairs to their
+     (next_state, reward) result, with the staet being the screen difference image
+    Transition = namedtuple('Transition',
+                            ('state', 'action', 'next_state', 'reward'))
+
+## ANN
+select_action(state):
+    uses trained model of NN
+    
+    input: 242 inputs
+    240 for state s, 2 for actions
+    
+    layer of 20 hidden neurons with sigmoid activation
+
+    1 output Q(s,a) - value of what our return would be, if we were to take an action in a given state
+    
+    
+    
+    
+
+
+
+
+
