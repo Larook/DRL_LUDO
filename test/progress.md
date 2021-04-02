@@ -108,7 +108,7 @@ get_reward(state)
     • 0.05 for forming a blockade.
     • -0.25 for getting a piece knocked in the next turn.
     • -1.0 for losing a game.
-    Rewards can be accumu
+    Rewards can be accumulated
 
 ## state, action, reward in transition (input to ANN)
 
@@ -129,6 +129,8 @@ select_action(state):
     layer of 20 hidden neurons with sigmoid activation
 
     1 output Q(s,a) - value of what our return would be, if we were to take an action in a given state
+
+Where to add the rewards?
     
     
     
