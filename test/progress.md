@@ -132,9 +132,18 @@ select_action(state):
 
 Where to add the rewards?
     
+
+## tutorial 
+https://jaromiru.com/2016/09/27/lets-make-a-dqn-theory/
+https://jaromiru.com/2016/10/03/lets-make-a-dqn-implementation/
+The key idea of experience replay5 is that we store these transitions in our memory and during each learning step, sample a random batch and perform a gradient descend on it. This way we solve both issues.
     
+The Brain class encapsulates the neural network. Our problem is simple enough so we will use only one hidden layer of 64 neurons, with ReLU activation function. The final layer will consist of only two neurons, one for each available action. Their activation function will be linear. Remember that we are trying to approximate the Q function, which in essence can be of any real value.
+
+Initialization with random agent
+~"We can assume, that a random policy would do the same job in choosing actions, but at much higher rate. Therefore we can simply fill the memory of the agent before the start of the learning itself with a random policy."
     
-    
+Ok it slightly is ok - at least it runs. But need to inspect more this target and saving the final states
 
 
 

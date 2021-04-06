@@ -17,12 +17,16 @@ class Feedforward(torch.nn.Module):
 
     def forward(self, x):
         # 1 output unit that represents Q(s, a).
+        x = torch.tensor(x).float()
+
         output = self.fc1(x)
         output = self.sigmoid(output)
 
         output = self.fc2(output)
         output = self.relu(output)
         return output
+
+
 
 
 
