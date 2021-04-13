@@ -8,11 +8,11 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 
-sys.path.append("../")
+# sys.path.append("../")
 
 from Feedforward import *
 from rewards import *
-from Memory import  *
+from Memory import *
 
 losses = []
 
@@ -216,45 +216,49 @@ def get_state_after_action(game, pawn):
 
 
 # TODO train the network using the memory
-def optimize_model(memory, ann_model):
+def optimize_model(game, memory, ann_model, available_actions):
 
     """ prepeare training data """
     batch = memory.sample(memory.capacity)
     batchLen = len(batch)
 
-    states = np.array([o[0] for o in batch])
+    # states = np.array([o[0] for o in batch])
     # change states to ann_input
+
+    # get the ANN inputs from batch
     ann_inputs = []
+    calculated_rewards = []
     for obs in batch:
         ann_inputs.append(get_reshaped_ann_input(begin_state=obs[0], new_state=obs[3], action=obs[1]))
+        calculated_rewards.append(obs[2])
 
-    ann_inputs = torch.tensor(ann_inputs)
-    ann_inputs = ann_inputs.float()
-    p = ann_model(ann_inputs)  # holds predictions for the states for each sample and will be used as a default target in the learning
-    # p = ann_model(states_)
+    ann_inputs = torch.tensor(ann_inputs).float()
+    predicted_q = ann_model(ann_inputs)  # holds predictions for the states for each sample and will be used as a default target in the learning
 
     x = np.zeros((batchLen, ann_model.input_size))
     y = np.zeros((batchLen, 1))  # only one output
 
     for i in range(batchLen):
         obs = batch[i]
-        s = obs[0];
-        a = obs[1];
-        r = obs[2];
+        # s = obs[0];
+        # a = obs[1];
+        # r = obs[2];
         s_ = obs[3]
 
-        t = p[i]  # target
         # if s_ is None:  # if s_ is terminated state (somebody won)
         #     t[a] = r
         # else:
-        # t[a] = r + GAMMA * np.amax(p_[i])
+        # t[a] = r + GAMMA * np.amax(p_[i])  # seems super important!
+
+        # t = predicted_q[i]  # target
+        GAMMA = 0.95
+        t = predicted_q[i] + GAMMA * get_max_reward_from_state(game, s_, available_actions)  # target
 
         # x[i] = s  # state
         x[i] = ann_inputs[i]  # state
         # x[i] = x[i].float()
 
-        # y[i] = t  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
-        y[i] = r  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
+        y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
     """ train the ann https://medium.com/deep-learning-study-notes/multi-layer-perceptron-mlp-in-pytorch-21ea46d50e62 """
     # ann_model.train(x, y)
@@ -281,7 +285,7 @@ def optimize_model(memory, ann_model):
     # print('Epoch %d | Loss %6.2f' % (epoch, sum(losses) / len(losses)))
 
 
-def action_selection(game, move_pieces, ann_model, begin_state, steps_done):
+def action_selection(game, move_pieces, ann_model, begin_state, steps_done, show=False):
     """
     Use MLP to get the Q_value of chosen action and state
     choose the best action and return the new_state
@@ -302,12 +306,8 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done):
         for possible_action in move_pieces:
             # get piece with best Q
             current_player = 0
-            # action = (x0, xf)
             new_state = get_state_after_action(game, possible_action)
             # print("new_state = ", new_state)
-
-            # action = (begin_state[current_player][possible_action] / 60, new_state[current_player][possible_action] / 60)
-
             input_ann = get_reshaped_ann_input(begin_state, new_state, possible_action)
             input_ann = torch.FloatTensor(input_ann)
 
@@ -326,14 +326,20 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done):
             for action, Q_v in action_q_l:
                 if Q_v > best_Q_val:
                     piece_to_move = action
+            if show:
+                print("\tbest action selected")
         else:
             # get random pawn
             piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
             new_state = get_state_after_action(game, piece_to_move)
+            if show:
+                print("\trandom action selected")
 
     else:
         piece_to_move = -1
         new_state = get_state_after_action(game, piece_to_move)
+        if show:
+            print("\tthe only possible action selected")
 
     return piece_to_move, new_state
 
@@ -344,9 +350,9 @@ def dqn_approach():
     import ludopy
     import numpy as np
 
-    Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
+    # Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
 
-    BATCH_SIZE = 1000
+    BATCH_SIZE = 10  # 1000
     g = ludopy.Game()
     memory = Memory(BATCH_SIZE)
     there_is_a_winner = False
@@ -356,7 +362,7 @@ def dqn_approach():
     epochs = 1
 
     steps_done = 0
-    optimizer = optim.RMSprop(ann_model.parameters())
+    # optimizer = optim.RMSprop(ann_model.parameters())
 
     for epoch in range(epochs):
 
@@ -366,25 +372,24 @@ def dqn_approach():
             pieces = g.get_pieces()
 
             begin_state = get_game_state(pieces[0])
-            print("<begin_state> round = %d " % (g.round))
+            print("<begin_state> round = %d | dice = %d " % (g.round, dice))
 
             """ select an action """
-            action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done)
+            action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, show=True)
             reward = get_reward(begin_state, action, new_state)
-            # reward = torch.tensor([reward])
 
             # save round observation to the memory
             memory.add((begin_state, action, reward, new_state))
 
             # TODO: update the ANN with the new memory - train it again
             """ perform one step of optimization with random batch from memory == TRAIN network """
-            optimize_model(memory, ann_model)
+            optimize_model(g, memory, ann_model, move_pieces)
 
             """ perform action and end round """
             _, _, _, _, _, there_is_a_winner = g.answer_observation(action)
 
     df_losses = pd.DataFrame.from_records(losses)
-    df_losses.to_csv('losses.csv')
+    df_losses.to_csv('results/losses.csv')
 
     print("Saving history to numpy file")
     g.save_hist("game_history.npy")
@@ -393,11 +398,12 @@ def dqn_approach():
 
     return True
 
-
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, dqn_approach())
+#
+# class MyTestCase(unittest.TestCase):
+#     def test_something(self):
+#         self.assertEqual(True, dqn_approach())
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+    dqn_approach()

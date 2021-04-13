@@ -146,6 +146,16 @@ Initialization with random agent
 Ok it slightly is ok - at least it runs. But need to inspect more this target and saving the final states
 
 
+In tutorial he uses states and states_
+but I am already saving the differences between the states as an input to the network
 
+    input: 242 inputs
+        240 for state s, 2 for actions
 
+What can we see from the analysis of losses?
+It seems unstable, but need to check for many more epochs
 
+    TODO:
+    - clean the code
+    - figure out why so many times we see "round number" - CORRECT (rolling 6 gives extra move)
+    - add decay of learning (and counter of training the ann)

@@ -1,13 +1,32 @@
 
+
 def count_pieces_on_tile(player_no, state, tile_no):
     value = state[player_no][tile_no]
     return value * 4
 
 
+def get_max_reward_from_state(game, state, possible_actions):
+    """ need to check all the movable pieces, and calculate all the possible rewards and get the maximum one"""
+    from ANN_action_selection import get_state_after_action
+
+    max_reward = 0
+    for action in possible_actions:
+
+        # get next state
+        new_state = get_state_after_action(game, action)
+
+        # get reward
+        reward = get_reward(state, action, new_state)
+        if reward >= max_reward:
+            max_reward = reward
+
+    return max_reward
+
+
 def get_reward(begin_state, piece_to_move, new_state):
     # TODO: maybe also add reward for entering a piece into safe_zone and blockade?
     """
-    • 1.0 for winning a game.
+        • 1.0 for winning a game.
         • 0.25 for releasing a piece from HOME.
     • 0.2 for defending a vulnerable piece.
         • 0.15 for knocking an opponent’s piece.
