@@ -157,5 +157,19 @@ It seems unstable, but need to check for many more epochs
 
     TODO:
     - clean the code
-    - figure out why so many times we see "round number" - CORRECT (rolling 6 gives extra move)
-    - add decay of learning (and counter of training the ann)
+    - plot the win rate ~ epochs
+    - maybe play also with history and try to see if its improving - bad idea
+
+    what to save to csv?
+    every decision:
+    - epoch_no, epochs_won, action_no, begin_state, action, new_state, reward, loss
+    - action = -1 means there were no movable objects
+    - add time DONE
+    - accumulated reward??? little sense yet
+
+    - change the epsilon - it should be totally random for the first n=5 plays -> it can be changed only with epsilon
+    - epsilon threshold should be still around 0.7-0.8 after 10 round -> 3380 action_no
+
+- does it run, even when an enemy player won? Should it learn those states? Maybe not
+- doesnt even get reward -1, nor 1
+- what about recording few plays by myself and then just pretrain the network? - so it actually has some winning data

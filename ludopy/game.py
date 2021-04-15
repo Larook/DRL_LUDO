@@ -167,7 +167,7 @@ class Game:
             self.current_player = 0
             self.round += 1
 
-    def answer_observation(self, piece_to_move):
+    def answer_observation(self, piece_to_move, player_DQN=0):
         """
         Answers an observation. An observation has to be given before an answer can be given.
 
@@ -228,6 +228,12 @@ class Game:
         if next_player:
             self.__count_player()
 
+        # # give info if DQN player was the winner:
+        # has_intelligent_agent_won = False
+        # if player_is_a_winner and self.current_player == player_DQN:
+        #     has_intelligent_agent_won = True
+
+        # return after_obs, has_intelligent_agent_won
         return after_obs
 
     def get_winner_of_game(self):

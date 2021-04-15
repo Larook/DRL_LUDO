@@ -1,6 +1,7 @@
 import copy
 import math
 import random
+import time
 import unittest
 import sys
 from collections import namedtuple
@@ -13,6 +14,7 @@ import pandas as pd
 from Feedforward import *
 from rewards import *
 from Memory import *
+from Learning_Info import Learning_Info
 
 losses = []
 
@@ -265,11 +267,18 @@ def optimize_model(game, memory, ann_model, available_actions):
     optimizer = torch.optim.Adam(ann_model.parameters())
     criterion = nn.CrossEntropyLoss()
 
+    losses_this_action = []
     for i in range(batchLen):
         output = ann_model(x[i])
         true_q_val = torch.tensor(y[i]).float()
 
-        # loss = criterion(output, y[i])
+        # output = model(x)
+        # loss = criterion(output, y)
+        # loss.backward()
+        # losses.append(loss.item())
+        # optimizer.step()
+
+        # loss = criterion(output, true_q_val)
         loss = F.smooth_l1_loss(output, true_q_val)
         optimizer.zero_grad()
         loss.backward()
@@ -278,11 +287,15 @@ def optimize_model(game, memory, ann_model, available_actions):
 
         global losses
         losses.append({'loss': loss.item()})
+        losses_this_action.append(loss.item())
+        # print("loss.item() = ", loss.item())
 
 
     #     if batch_num % 40 == 0:
     #         print('\tEpoch %d | Batch %d | Loss %6.2f' % (epoch, batch_num, loss.item()))
     # print('Epoch %d | Loss %6.2f' % (epoch, sum(losses) / len(losses)))
+    loss_avg = np.mean(losses_this_action)
+    return loss_avg
 
 
 def action_selection(game, move_pieces, ann_model, begin_state, steps_done, show=False):
@@ -295,9 +308,11 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, show
     :param steps_done:
     :return:
     """
+    # steps_done for 10 games ~= 3380
     EPS_START = 0.9
     EPS_END = 0.05
-    EPS_DECAY = 200
+    # EPS_DECAY = 1000  # after 10 plays eps_threshold=0.0789
+    EPS_DECAY = 18000  # after 10 plays eps_threshold=0.754 -> after 100 plays: 0.17999013613686377 and reaches EPS_END after 1000 plays
 
     if len(move_pieces):
         action_q_l = []
@@ -305,7 +320,6 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, show
 
         for possible_action in move_pieces:
             # get piece with best Q
-            current_player = 0
             new_state = get_state_after_action(game, possible_action)
             # print("new_state = ", new_state)
             input_ann = get_reshaped_ann_input(begin_state, new_state, possible_action)
@@ -319,6 +333,7 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, show
         # epsilon greedy
         sample = random.random()
         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY)
+        print("eps_threshold = ", eps_threshold)
         steps_done += 1
 
         if sample > eps_threshold:
@@ -344,52 +359,98 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, show
     return piece_to_move, new_state
 
 
-
-
 def dqn_approach():
     import ludopy
     import numpy as np
 
-    # Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
+    ai_agents = [0]  # which id of player should be played by ai?
 
-    BATCH_SIZE = 10  # 1000
     g = ludopy.Game()
-    memory = Memory(BATCH_SIZE)
     there_is_a_winner = False
 
     # create model of ANN
     ann_model = Feedforward(input_size=242, hidden_size=21)  # model of ANN
-    epochs = 1
+    BATCH_SIZE = 50  # 1000
+    memory = Memory(BATCH_SIZE)
+    learning_info_data = Learning_Info()
 
+    # counter info
+    won_counter = 0
+    time_epochs = []
+    avg_time_epoch = 0
+    avg_time_left = 0
+
+    epochs = 1000
     steps_done = 0
-    # optimizer = optim.RMSprop(ann_model.parameters())
-
     for epoch in range(epochs):
+        time_turns = []
+        time_epoch_start = time.time()
+        avg_time_turn = 0
 
+        """ main game loop """
         while not there_is_a_winner:
+            time_turn_start = time.time()
+
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner,
              there_is_a_winner), player_i = g.get_observation()
             pieces = g.get_pieces()
 
-            begin_state = get_game_state(pieces[0])
-            print("<begin_state> round = %d | dice = %d " % (g.round, dice))
+            if player_i not in ai_agents:
+                reward = 0
+                if len(move_pieces) > 0:
+                    action = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
+                else:
+                    action = -1
+                new_state = get_state_after_action(g, action)
+            else:
+                """ select an action of AI player """
+                begin_state = get_game_state(pieces[player_i])
+                # print("<begin_state> epoch = %d | round = %d | dice = %d " % (epoch, g.round, dice))
 
-            """ select an action """
-            action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, show=True)
-            reward = get_reward(begin_state, action, new_state)
+                action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, show=False)
+                reward = get_reward(begin_state, action, new_state)
 
-            # save round observation to the memory
-            memory.add((begin_state, action, reward, new_state))
+                # save round observation to the memory
+                memory.add((begin_state, action, reward, new_state))
 
-            # TODO: update the ANN with the new memory - train it again
-            """ perform one step of optimization with random batch from memory == TRAIN network """
-            optimize_model(g, memory, ann_model, move_pieces)
+                # TODO: update the ANN with the new memory - train it again
+                """ perform one step of optimization with random batch from memory == TRAIN network """
+                loss_avg = optimize_model(g, memory, ann_model, move_pieces)
 
             """ perform action and end round """
-            _, _, _, _, _, there_is_a_winner = g.answer_observation(action)
+            _, _, _, _, player_is_a_winner, there_is_a_winner = g.answer_observation(action)
+            if reward == 1 and player_i in ai_agents:
+                won_counter += 1
+            steps_done += 1
+            if player_i in ai_agents:
+                learning_info_data.append(epoch_no=epoch, epochs_won=won_counter, ai_player_i=player_i,
+                                          action_no=steps_done, begin_state=begin_state, action=action,
+                                          new_state=new_state, reward=reward, loss=loss_avg)
+
+            time_turn_end = time.time()
+            time_turns.append(time_turn_end - time_turn_start)
+            avg_time_turn = np.mean(time_turns)
+            if steps_done % 10 == 0:
+                print("epoch = %d | round = %d "
+                      "<avg_time_left = %.2f avg_time_epoch = %.2f | avg_time_turn = %.2f> "
+                      "| won_counter = %d | steps_done = %d | action = %d | reward = %f, loss_avg = %f" %
+                      (epoch, g.round, avg_time_left, avg_time_epoch, avg_time_turn, won_counter, steps_done, action, reward, loss_avg))
+        time_epoch_end = time.time()
+        time_epochs.append(time_epoch_end-time_epoch_start)
+        avg_time_epoch = np.mean(time_epochs)
+
+        # save results after each epoch
+        learning_info_data.save_to_csv('results/learning_info_data_process.csv')
+
+        # restart the game after each epoch
+        there_is_a_winner = False
+        g.reset()
+        g = ludopy.Game()
+        avg_time_left = (epochs - epoch) * avg_time_epoch
 
     df_losses = pd.DataFrame.from_records(losses)
     df_losses.to_csv('results/losses.csv')
+    learning_info_data.save_to_csv('results/learning_info_data_x.csv')
 
     print("Saving history to numpy file")
     g.save_hist("game_history.npy")
