@@ -18,7 +18,7 @@ from Learning_Info import Learning_Info
 
 losses = []
 
-def get_game_state(players):
+def get_game_state(pieces_seen_from_players):
     """
     state represented by  240 variables - for each player 60
     Each state (id of tile) can have values 0 - 1, where 0 means 0 pawns on the tile, and 1 means 4 pawns on tile
@@ -34,8 +34,7 @@ def get_game_state(players):
     # save the positions
     # update state of the player
     state_all = np.empty([4, POSITIONS_PER_PLAYER], float)
-    for index, player in enumerate(players):
-        pawn_positions = player
+    for index, pawn_positions in enumerate(pieces_seen_from_players):
         state = np.zeros(POSITIONS_PER_PLAYER)
         for pawn_id in pawn_positions:
             state[pawn_id] += 0.25
@@ -228,8 +227,7 @@ def optimize_model(game, memory, ann_model, available_actions):
     # change states to ann_input
 
     # get the ANN inputs from batch
-    ann_inputs = []
-    calculated_rewards = []
+    ann_inputs, calculated_rewards = [], []
     for obs in batch:
         ann_inputs.append(get_reshaped_ann_input(begin_state=obs[0], new_state=obs[3], action=obs[1]))
         calculated_rewards.append(obs[2])
@@ -333,7 +331,7 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, show
         # epsilon greedy
         sample = random.random()
         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY)
-        print("eps_threshold = ", eps_threshold)
+        # print("eps_threshold = ", eps_threshold)
         steps_done += 1
 
         if sample > eps_threshold:
@@ -366,7 +364,6 @@ def dqn_approach():
     ai_agents = [0]  # which id of player should be played by ai?
 
     g = ludopy.Game()
-    there_is_a_winner = False
 
     # create model of ANN
     ann_model = Feedforward(input_size=242, hidden_size=21)  # model of ANN
@@ -388,7 +385,8 @@ def dqn_approach():
         avg_time_turn = 0
 
         """ main game loop """
-        while not there_is_a_winner:
+        ai_player_seen_end = False
+        while not ai_player_seen_end:
             time_turn_start = time.time()
 
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner,
@@ -408,14 +406,17 @@ def dqn_approach():
                 # print("<begin_state> epoch = %d | round = %d | dice = %d " % (epoch, g.round, dice))
 
                 action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, show=False)
-                reward = get_reward(begin_state, action, new_state)
+                reward = get_reward(begin_state, action, new_state, pieces[player_i][player_i])
 
                 # save round observation to the memory
                 memory.add((begin_state, action, reward, new_state))
 
-                # TODO: update the ANN with the new memory - train it again
                 """ perform one step of optimization with random batch from memory == TRAIN network """
                 loss_avg = optimize_model(g, memory, ann_model, move_pieces)
+
+                if player_i in ai_agents:
+                    if any(count_pieces_on_tile(player_no=player_id, state=new_state, tile_no=59) == 4 for player_id in range(0,4)):
+                        ai_player_seen_end = True
 
             """ perform action and end round """
             _, _, _, _, player_is_a_winner, there_is_a_winner = g.answer_observation(action)
@@ -443,7 +444,7 @@ def dqn_approach():
         learning_info_data.save_to_csv('results/learning_info_data_process.csv')
 
         # restart the game after each epoch
-        there_is_a_winner = False
+        ai_player_seen_end = False
         g.reset()
         g = ludopy.Game()
         avg_time_left = (epochs - epoch) * avg_time_epoch

@@ -171,5 +171,9 @@ It seems unstable, but need to check for many more epochs
     - epsilon threshold should be still around 0.7-0.8 after 10 round -> 3380 action_no
 
 - does it run, even when an enemy player won? Should it learn those states? Maybe not
-- doesnt even get reward -1, nor 1
+    - doesnt even get reward -1, nor 1 DONE
+    - add reward also for the moving the furthest pawn ? seems sketchy but at least could outperform random players? DONE
 - what about recording few plays by myself and then just pretrain the network? - so it actually has some winning data
+- probably still then there will be a need for tweaking the parameters
+- why the first rounds of a game are super fast? - doesn't it have access to the full batch of the net?
+- read the implementations again!
