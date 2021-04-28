@@ -7,7 +7,7 @@ def count_pieces_on_tile(player_no, state, tile_no):
 
 def get_max_reward_from_state(game, state, possible_actions):
     """ need to check all the movable pieces, and calculate all the possible rewards and get the maximum one"""
-    from ANN_action_selection import get_state_after_action
+    from DQN_plays import get_state_after_action
 
     max_reward = 0
     for action in possible_actions:

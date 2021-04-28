@@ -212,6 +212,9 @@ see what is executing every time - whats the longest function
 4. get_game_state()
 5. get_reward()
 
+    on laptop it seems to run ludo faster without the GPU -> move to collab and see there.
+    After comparing timing of the first fully DQN-predicted game the fastest approach would be solving the problem locally without gpu
+
 After that try TD approach with 2 networks, but still 1 is not enough...
 Then try just to teach the approach to move the furthest pawn - save the model and then try to replay the game using model
 
@@ -224,4 +227,5 @@ Then try just to teach the approach to move the furthest pawn - save the model a
     using the DQN shows behaviour of selecting the furthest pawn - that's okish but moving new one from home should be more important
 
 Add continuing to learn from the selected model!
+
 

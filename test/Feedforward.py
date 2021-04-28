@@ -6,8 +6,16 @@ import torchvision.transforms as T
 
 
 class Feedforward(torch.nn.Module):
-    def __init__(self, input_size, hidden_size=20):
+    def __init__(self, try_cuda, input_size, hidden_size=20):
         super(Feedforward, self).__init__()
+        if try_cuda and torch.cuda.is_available():
+            print("WILL USE CUDA")
+            print(torch.cuda.get_device_name(0))
+            device_name = torch.device('cuda:0')
+            self.cuda()
+        else:
+            print("WON'T USE CUDA")
+
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.fc1 = torch.nn.Linear(self.input_size, self.hidden_size)

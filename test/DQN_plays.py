@@ -1,3 +1,5 @@
+import ludopy
+
 import copy
 import math
 import random
@@ -292,20 +294,23 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, is_r
     return piece_to_move, new_state
 
 
-def dqn_approach(do_random_walk, use_model, train):
-    import ludopy
-    import numpy as np
+def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
     ai_agents = [0]  # which id of player should be played by ai?
     g = ludopy.Game()
 
     # load/create model of ANN
-    if use_model:
-        ann_model = Feedforward(input_size=242, hidden_size=21)
+
+    if load_model:
+        ann_model = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
+
         checkpoint = torch.load('results/models/running/model_test_48_epochs.pth')
         ann_model.load_state_dict(checkpoint)
     else:
-        ann_model = Feedforward(input_size=242, hidden_size=21)  # model of ANN
+        ann_model = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
+    if not train:
+        ann_model.model.eval()
+
     BATCH_SIZE = 600  # 1000
     if do_random_walk:
         BATCH_SIZE = 10000  # 1000
@@ -352,7 +357,7 @@ def dqn_approach(do_random_walk, use_model, train):
                 # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
 
                 t_action_selection = time.time()
-                action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=use_model)
+                action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=load_model)
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
@@ -364,7 +369,7 @@ def dqn_approach(do_random_walk, use_model, train):
 
                 """ perform one step of optimization with random batch from memory == TRAIN network """
                 # if not use_model:
-                if train or not use_model:
+                if train or not load_model:
                     t_optimize_model = time.time()
                     loss_avg = optimize_model(g, memory, ann_model, move_pieces, BATCH_SIZE)
                 else:
@@ -408,7 +413,7 @@ def dqn_approach(do_random_walk, use_model, train):
         learning_info_data.save_to_csv('results/learning_info_data_process.csv', epoch_no=epoch)
         learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
-        if epoch % 3 == 0 and not use_model:
+        if epoch % 3 == 0 and not load_model:
             print("saving ann model")
             torch.save(ann_model.state_dict(), 'results/models/running/model_test_'+str(epoch)+"_epochs.pth")
 
@@ -428,7 +433,7 @@ def dqn_approach(do_random_walk, use_model, train):
     learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch)
 
     # Save history and ANN model
-    if not use_model:
+    if not load_model:
         print("saving ann model")
         torch.save(ann_model.state_dict(), 'results/models/model_final.pth')
     print("Saving history to numpy file")
@@ -439,4 +444,4 @@ def dqn_approach(do_random_walk, use_model, train):
 
 if __name__ == '__main__':
     # unittest.main()
-    dqn_approach(do_random_walk=False, use_model=True, train=False)
+    dqn_approach(do_random_walk=False, load_model=True, train=True, use_gpu=False)
