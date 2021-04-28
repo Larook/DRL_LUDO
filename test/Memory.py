@@ -9,7 +9,7 @@ class Memory:  # stored as ( s, a, r, s_ )
 
     def add(self, sample):
         self.samples.append(sample)
-
+        # removes oldest sample - maybe we could need only to have 1 game in memory?
         if len(self.samples) > self.capacity:
             self.samples.pop(0)
 

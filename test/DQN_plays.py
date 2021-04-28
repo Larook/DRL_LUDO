@@ -9,8 +9,6 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 
-# sys.path.append("../")
-
 from Feedforward import *
 from rewards import *
 from Memory import *
@@ -43,7 +41,6 @@ def get_game_state(pieces_seen_from_players):
     # print("state_all", state_all)
     return state_all
 
-
 def get_pawn_id_from_tile(tile_id, player_pieces):
     """
     get the id of a random pawn that is located on the tile_id
@@ -54,43 +51,6 @@ def get_pawn_id_from_tile(tile_id, player_pieces):
         if pawn == tile_id:
             best_pawn_id = i
             return best_pawn_id
-
-
-def choose_action_furthest_pawn(state, pieces, move_pieces):
-    """
-    Always choose the furthest pawn to move!
-    :param state: from papers - length 240
-    :param pieces: all of the pieces
-    :param move_pieces: only movable ones
-    :return: id of further pawn - if possible. If its not movable just return random movable one
-    """
-    player_pieces = pieces[0][0]
-    player0_state = state[0]
-    furthest_dist = 0
-    best_pawn_id_to_move = 100
-
-    # if all are zeros then choose random
-    if player0_state[0] == 1:
-        return move_pieces[np.random.randint(0, len(move_pieces))]
-
-    # if a pawn is outside home - get his distance (id of tile that he is standing on)
-    for tile_id, occupation_of_tile in enumerate(player0_state):
-        # if is outside of home and the furthest so far
-        if tile_id >= furthest_dist and occupation_of_tile != 0:
-            furthest_tile_id = tile_id
-            # get the id of the pawn
-            move_pawn_id = get_pawn_id_from_tile(furthest_tile_id, player_pieces)
-            # check if it is in movable pieces
-            if move_pawn_id in move_pieces:
-                best_pawn_id_to_move = move_pawn_id
-
-    # if managed to find a movable piece outside home
-    if best_pawn_id_to_move != 100:
-        return best_pawn_id_to_move
-    else:
-        # if not just pick random movable piece
-        return move_pieces[np.random.randint(0, len(move_pieces))]
-
 
 def get_reshaped_ann_input(begin_state, new_state, action):
     """ save STATE and ACTION into 1-dimensional np.array. This should be an input to a ANN """
@@ -266,7 +226,7 @@ def optimize_model(game, memory, ann_model, available_actions, BATCH_SIZE):
     return loss_avg
 
 
-def action_selection(game, move_pieces, ann_model, begin_state, steps_done, is_random=False, show=False):
+def action_selection(game, move_pieces, ann_model, begin_state, steps_done, is_random=False, show=False, exploit_model=False):
     """
     Use MLP to get the Q_value of chosen action and state
     choose the best action and return the new_state
@@ -306,7 +266,7 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, is_r
         # print("eps_threshold = ", eps_threshold)
         steps_done += 1
 
-        if sample > eps_threshold:
+        if sample > eps_threshold or exploit_model:
             # choose best pawn
             for action, Q_v in action_q_l:
                 if Q_v > best_Q_val:
@@ -332,22 +292,27 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, is_r
     return piece_to_move, new_state
 
 
-def dqn_approach(do_random_walk):
+def dqn_approach(do_random_walk, use_model, train):
     import ludopy
     import numpy as np
 
     ai_agents = [0]  # which id of player should be played by ai?
-
     g = ludopy.Game()
 
-    # create model of ANN
-    ann_model = Feedforward(input_size=242, hidden_size=21)  # model of ANN
+    # load/create model of ANN
+    if use_model:
+        ann_model = Feedforward(input_size=242, hidden_size=21)
+        checkpoint = torch.load('results/models/running/model_test_48_epochs.pth')
+        ann_model.load_state_dict(checkpoint)
+    else:
+        ann_model = Feedforward(input_size=242, hidden_size=21)  # model of ANN
     BATCH_SIZE = 600  # 1000
     if do_random_walk:
         BATCH_SIZE = 10000  # 1000
+
     memory = Memory(BATCH_SIZE)
     learning_info_data = Learning_Info()
-    # try:
+
     # counter info
     won_counter = 0
     time_epochs = []
@@ -387,7 +352,7 @@ def dqn_approach(do_random_walk):
                 # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
 
                 t_action_selection = time.time()
-                action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, is_random=do_random_walk, show=False)
+                action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=use_model)
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
@@ -398,8 +363,12 @@ def dqn_approach(do_random_walk):
                 memory.add((begin_state, action, reward, new_state))
 
                 """ perform one step of optimization with random batch from memory == TRAIN network """
-                t_optimize_model = time.time()
-                loss_avg = optimize_model(g, memory, ann_model, move_pieces, BATCH_SIZE)
+                # if not use_model:
+                if train or not use_model:
+                    t_optimize_model = time.time()
+                    loss_avg = optimize_model(g, memory, ann_model, move_pieces, BATCH_SIZE)
+                else:
+                    loss_avg = 0
                 # print("<timing> t_optimize_model =", time.time()-t_optimize_model)
                 rewards_info.append(reward)
 
@@ -439,13 +408,13 @@ def dqn_approach(do_random_walk):
         learning_info_data.save_to_csv('results/learning_info_data_process.csv', epoch_no=epoch)
         learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
-        if epoch % 3 == 0:
+        if epoch % 3 == 0 and not use_model:
             print("saving ann model")
             torch.save(ann_model.state_dict(), 'results/models/running/model_test_'+str(epoch)+"_epochs.pth")
 
         if won_counter % 2 == 0 and won_counter > 0:
-            g.save_hist("videos_history/game_history.npy")
-            g.save_hist_video("videos_history/game_ANN_last_win_3_won.mp4")
+            g.save_hist("results/videos_history/game_history.npy")
+            g.save_hist_video("results/videos_history/game_ANN_last_win_3_won.mp4")
 
         # restart the game after each epoch
         ai_player_seen_end = False
@@ -459,25 +428,15 @@ def dqn_approach(do_random_walk):
     learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch)
 
     # Save history and ANN model
-    print("saving ann model")
-    torch.save(ann_model.state_dict(), 'results/models/model_final.pth')
+    if not use_model:
+        print("saving ann model")
+        torch.save(ann_model.state_dict(), 'results/models/model_final.pth')
     print("Saving history to numpy file")
     g.save_hist("videos_history/game_history.npy")
     print("Saving game video")
     g.save_hist_video("videos_history/game_ANN_test.mp4")
 
-    # except:
-    #     print("saving ann model")
-    #     torch.save(ann_model.state_dict(), 'results/models/model_test_'+str(epoch)+"_epochs.pth")
-
-    return True
-
-#
-# class MyTestCase(unittest.TestCase):
-#     def test_something(self):
-#         self.assertEqual(True, dqn_approach())
-
 
 if __name__ == '__main__':
     # unittest.main()
-    dqn_approach(do_random_walk=False)
+    dqn_approach(do_random_walk=False, use_model=True, train=False)

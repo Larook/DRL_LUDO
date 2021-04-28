@@ -25,13 +25,12 @@ def get_max_reward_from_state(game, state, possible_actions):
 
 
 def get_reward(begin_state, piece_to_move, new_state, pieces_player_now):
-    # TODO: maybe also add reward for entering a piece into safe_zone and blockade?
     """
         • 1.0 for winning a game.
         • 0.25 for releasing a piece from HOME.
     • 0.2 for defending a vulnerable piece.
         • 0.15 for knocking an opponent’s piece.
-    • 0.1 for moving the piece that is closest to home.
+        • 0.1 for moving the piece that is closest to home.
     • 0.05 for forming a blockade.
     • -0.25 for getting a piece knocked in the next turn.
         • -1.0 for losing a game.
@@ -66,7 +65,8 @@ def get_reward(begin_state, piece_to_move, new_state, pieces_player_now):
     # check the end of the game
     if enemies_already_won:
         reward -= 1
-    elif count_pieces_on_tile(player_no=player_i, state=begin_state, tile_no=finished_tile) == 4:
+    elif count_pieces_on_tile(player_no=player_i, state=new_state, tile_no=finished_tile) == 4:
+        # print("player 0 wins the game in this round")
         reward += 1
 
     # check if moved piece is the furthest away
@@ -81,4 +81,9 @@ def get_reward(begin_state, piece_to_move, new_state, pieces_player_now):
     if furthest_piece == piece_to_move and furthest_dist != 0:
         reward += 0.1
         # exit('chosen furthest one')
+
+    if reward < 0:
+        print('ENEMY ENDED THE GAME, reward = ', reward)
+    if reward >= 1:
+        print('AI PLAYER ENDED THE GAME , reward', reward)
     return reward

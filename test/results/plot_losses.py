@@ -3,7 +3,13 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-    df = pd.read_csv('losses_100_epochs_100_batch_l1_loss.csv')
+    df = pd.read_csv('learning_info_data_process.csv')
 
-    df.plot(y='loss')
+    # fig = plt.figure(figsize=(3, 6))
+    df.plot(y=['loss', 'avg_reward', 'avg_reward_this_epoch'], figsize=(30, 10))
+    plt.xlabel('x-axis label')
+    plt.ylabel('y-axis label')
+    plt.title('batch = 600,  epochs = 17')
+
+    # plt.savefig("20_04.jpg")
     plt.show()

@@ -153,7 +153,7 @@ but I am already saving the differences between the states as an input to the ne
         240 for state s, 2 for actions
 
 What can we see from the analysis of losses?
-It seems unstable, but need to check for many more epochs
+It seems unstable, but need to check for many more epochs -> more epochs still not winning
 
     TODO:
     - clean the code
@@ -170,10 +170,58 @@ It seems unstable, but need to check for many more epochs
     - change the epsilon - it should be totally random for the first n=5 plays -> it can be changed only with epsilon
     - epsilon threshold should be still around 0.7-0.8 after 10 round -> 3380 action_no
 
-- does it run, even when an enemy player won? Should it learn those states? Maybe not
+    - does it run, even when an enemy player won? Should it learn those states? Maybe not
     - doesnt even get reward -1, nor 1 DONE
     - add reward also for the moving the furthest pawn ? seems sketchy but at least could outperform random players? DONE
 - what about recording few plays by myself and then just pretrain the network? - so it actually has some winning data
 - probably still then there will be a need for tweaking the parameters
-- why the first rounds of a game are super fast? - doesn't it have access to the full batch of the net?
+    - add average reward of epoch to plot DONE
+  
+- why the first rounds of a game are super fast? - doesn't it have access to the full batch of the net? - Should have
 - read the implementations again!
+
+should add target network?
+should train after the reached end state with reward +-1?
+
+1 - plot the random walk rewards etc
+2 - look at the code from internet! check similarities -> how is their immediate reward calculated?
+3 - try to teach just to choose the furthest piece
+
+    in pytorch there was no training dqn if batch isn't the full size -> fixed
+
+Add saving the model of ann!
+
+Case of the batch_size: https://www.samyzaf.com/ML/rl/qmaze.html
+"The training of N will be done after each game move by injecting a random selection of the most recent training samples to N. Assuming that our game skill will get better in time, we will use only a small number of the most recent training samples. We will forget old samples (which are probably bad) and will delete them from memory."
+
+    select action:
+        use Q from NN
+    get reward and next state (state, action) - it is immediate reward!
+    store experience
+    train NN - this guy uses only one network - not really terminal difference, and the pipeline looks ok
+
+when epoch==40 -> avg time epoch == 224sec = almost 4 min
+avg time left to have 10k -> approx 60 hours!!!
+to see if we can do better need to make it faster
+
+see what is executing every time - whats the longest function
+## timing of functions
+1. optimize_model() = 7.0066 - could try to move to collabs
+2. get_state_after_action() = 0.0035 but executed a lot! - how can we strip it? Need to constantly check if random_walk still sees some wins
+3. action_selection()
+4. get_game_state()
+5. get_reward()
+
+After that try TD approach with 2 networks, but still 1 is not enough...
+Then try just to teach the approach to move the furthest pawn - save the model and then try to replay the game using model
+
+    print current dice to csv
+    if won record the video
+
+    can the game be won with the random moves? Yes it should be 25% chance to win. Fixed and working!
+    add winrate to csv
+
+    using the DQN shows behaviour of selecting the furthest pawn - that's okish but moving new one from home should be more important
+
+Add continuing to learn from the selected model!
+
