@@ -176,13 +176,8 @@ def get_state_after_action(game, pawn):
 
 
 # TODO train the network using the memory
-def optimize_model(game, memory, ann_model, available_actions, BATCH_SIZE):
-
-    """ prepeare training data """
-    batch = memory.sample(memory.capacity)
+def optimize_model(game, batch, target_net, available_actions):
     batchLen = len(batch)
-    if batchLen < BATCH_SIZE:  # doesnt train when not enough samples in memory
-        return 0
 
     # get the ANN inputs from batch
     ann_inputs, calculated_rewards = [], []
@@ -191,9 +186,9 @@ def optimize_model(game, memory, ann_model, available_actions, BATCH_SIZE):
         calculated_rewards.append(obs[2])
 
     ann_inputs = torch.tensor(ann_inputs).float()
-    predicted_q = ann_model(ann_inputs)  # holds predictions for the states for each sample and will be used as a default target in the learning
+    predicted_q = target_net(ann_inputs)  # holds predictions for the states for each sample and will be used as a default target in the learning
 
-    x = np.zeros((batchLen, ann_model.input_size))
+    x = np.zeros((batchLen, target_net.input_size))
     y = np.zeros((batchLen, 1))  # only one output
 
     for i in range(batchLen):
@@ -205,10 +200,10 @@ def optimize_model(game, memory, ann_model, available_actions, BATCH_SIZE):
         y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
     """ train the ann https://medium.com/deep-learning-study-notes/multi-layer-perceptron-mlp-in-pytorch-21ea46d50e62 """
-    optimizer = torch.optim.Adam(ann_model.parameters())  # Optimizers help the model find the minimum.
+    optimizer = torch.optim.Adam(target_net.parameters())  # Optimizers help the model find the minimum.
     losses_this_action = []
     for i in range(batchLen):
-        output = ann_model(x[i])
+        output = target_net(x[i])
         true_q_val = torch.tensor(y[i]).float()
         loss = F.smooth_l1_loss(output, true_q_val)  # L1 loss for regression applications
         loss.backward()
@@ -228,12 +223,12 @@ def optimize_model(game, memory, ann_model, available_actions, BATCH_SIZE):
     return loss_avg
 
 
-def action_selection(game, move_pieces, ann_model, begin_state, steps_done, is_random=False, show=False, exploit_model=False):
+def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_random=False, show=False, exploit_model=False):
     """
     Use MLP to get the Q_value of chosen action and state
     choose the best action and return the new_state
     :param move_pieces:
-    :param ann_model:
+    :param q_net:
     :param begin_state:
     :param steps_done:
     :return:
@@ -257,8 +252,9 @@ def action_selection(game, move_pieces, ann_model, begin_state, steps_done, is_r
             input_ann = get_reshaped_ann_input(begin_state, new_state, possible_action)
             input_ann = torch.FloatTensor(input_ann)
 
+            # TODO: check if no_grad() is needed
             with torch.no_grad():
-                Q_est = ann_model(input_ann)
+                Q_est = q_net(input_ann)
 
             action_q_l.append((possible_action, Q_est))
 
@@ -301,15 +297,26 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
     # load/create model of ANN
 
+    """ q_net - network to get the Q of the current state """
     if load_model:
-        ann_model = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
+        q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
 
-        checkpoint = torch.load('results/models/running/model_test_48_epochs.pth')
-        ann_model.load_state_dict(checkpoint)
+        checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
+        epoch_last = 48
+        q_net.load_state_dict(checkpoint)
     else:
-        ann_model = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
+        q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
     if not train:
-        ann_model.model.eval()
+        q_net.model.eval()
+
+    """ target_net - this target network is used to generate target values or ground truth. 
+    The weights of this network are held fixed for a fixed number of training steps after which these are updated with the weight of Main Network. 
+    In this way, the distribution of our target return is also held fixed for some fixed iterations which increase training stability. """
+    target_net = copy.deepcopy(q_net)
+
+    """ synchronising of networks update """
+    network_sync_freq = 100
+    network_sync_counter = 0
 
     BATCH_SIZE = 600  # 1000
     if do_random_walk:
@@ -324,10 +331,17 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     rewards_info = []
     avg_time_epoch = 0
     avg_time_left = 0
+    loss_avg = 0
 
     epochs = 1000
     steps_done = 0
-    for epoch in range(1, epochs):
+
+    if load_model:
+        epochs_elapsed = range(epoch_last, epochs)
+    else:
+        epochs_elapsed = range(1, epochs)
+
+    for epoch in epochs_elapsed:
         time_turns = []
         time_epoch_start = time.time()
         avg_time_turn = 0
@@ -339,8 +353,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         while not ai_player_seen_end:
             time_turn_start = time.time()
 
-            (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner,
-             there_is_a_winner), player_i = g.get_observation()
+            (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
             pieces = g.get_pieces()
 
             if player_i not in ai_agents:
@@ -351,13 +364,13 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                 new_state = get_state_after_action(g, action)
             else:
                 """ select an action of AI player """
-                reward = 0
+
                 t_get_game_state = time.time()
                 begin_state = get_game_state(pieces[player_i])
                 # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
 
                 t_action_selection = time.time()
-                action, new_state = action_selection(g, move_pieces, ann_model, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=load_model)
+                action, new_state = action_selection(g, move_pieces, q_net, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=load_model)
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
@@ -370,10 +383,22 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                 """ perform one step of optimization with random batch from memory == TRAIN network """
                 # if not use_model:
                 if train or not load_model:
-                    t_optimize_model = time.time()
-                    loss_avg = optimize_model(g, memory, ann_model, move_pieces, BATCH_SIZE)
-                else:
-                    loss_avg = 0
+
+                    """ prepeare training data """
+                    batch = memory.sample(memory.capacity)
+                    batchLen = len(batch)
+                    if batchLen >= BATCH_SIZE:  # doesnt train when not enough samples in memory
+
+                        """ synchronise the networks if needed """
+                        if (network_sync_counter == network_sync_freq):
+                            target_net.load_state_dict(q_net.state_dict())
+                            print("<....>synchronising the networks!!! ")
+                            # exit(1)
+                            network_sync_counter = 0
+
+                        t_optimize_model = time.time()
+                        loss_avg = optimize_model(game=g, batch=batch, target_net=target_net, available_actions=move_pieces)
+                        network_sync_counter += 1
                 # print("<timing> t_optimize_model =", time.time()-t_optimize_model)
                 rewards_info.append(reward)
 
@@ -413,9 +438,9 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         learning_info_data.save_to_csv('results/learning_info_data_process.csv', epoch_no=epoch)
         learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
-        if epoch % 3 == 0 and not load_model:
+        if epoch % 3 == 0 and train:
             print("saving ann model")
-            torch.save(ann_model.state_dict(), 'results/models/running/model_test_'+str(epoch)+"_epochs.pth")
+            torch.save(q_net.state_dict(), 'results/models/running/model_test_'+str(epoch)+"_epochs.pth")
 
         if won_counter % 2 == 0 and won_counter > 0:
             g.save_hist("results/videos_history/game_history.npy")
@@ -435,7 +460,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     # Save history and ANN model
     if not load_model:
         print("saving ann model")
-        torch.save(ann_model.state_dict(), 'results/models/model_final.pth')
+        torch.save(q_net.state_dict(), 'results/models/model_final.pth')
     print("Saving history to numpy file")
     g.save_hist("videos_history/game_history.npy")
     print("Saving game video")
@@ -444,4 +469,5 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
 if __name__ == '__main__':
     # unittest.main()
-    dqn_approach(do_random_walk=False, load_model=True, train=True, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=True, use_gpu=False)
+    dqn_approach(do_random_walk=True, load_model=True, train=True, use_gpu=False)

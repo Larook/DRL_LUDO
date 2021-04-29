@@ -9,7 +9,7 @@ if __name__ == "__main__":
     df.plot(y=['loss', 'avg_reward', 'avg_reward_this_epoch'], figsize=(30, 10))
     plt.xlabel('x-axis label')
     plt.ylabel('y-axis label')
-    plt.title('batch = 600,  epochs = 17')
+    plt.title('batch = ??,  epochs = ??')
 
     # plt.savefig("20_04.jpg")
     plt.show()

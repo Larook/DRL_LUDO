@@ -229,3 +229,38 @@ Then try just to teach the approach to move the furthest pawn - save the model a
 Add continuing to learn from the selected model!
 
 
+## using 2 networks - q_net and target_net  ->  https://blog.gofynd.com/building-a-deep-q-network-in-pytorch-fa1086aa5435
+We executed our optimization step to bring the prediction close to ground truth but at the same time we are changing the weights of the network which gave us the ground truth. 
+This causes instability in training.
+
+The solution is to have another network called Target Network which is an exact copy of the Main Network. 
+This target network is used to generate target values or ground truth. 
+The weights of this network are held fixed for a fixed number of training steps after which these are updated with the weight of Main Network. 
+In this way, the distribution of our target return is also held fixed for some fixed iterations which increase training stability.
+
+    def train(self, batch_size ):
+            s, a, rn, sn = self.sample_from_experience( sample_size = batch_size)
+            if(self.network_sync_counter == self.network_sync_freq):
+                self.target_net.load_state_dict(self.q_net.state_dict())
+                self.network_sync_counter = 0
+            
+            # predict expected return of current state using main network
+            qp = self.q_net(s.cuda())
+            pred_return, _ = torch.max(qp, axis=1)
+            
+            # get target return using target network
+            q_next = self.get_q_next(sn.cuda())
+            target_return = rn.cuda() + self.gamma * q_next
+            
+            loss = self.loss_fn(pred_return, target_return)
+            self.optimizer.zero_grad()
+            loss.backward(retain_graph=True)
+            self.optimizer.step()
+            
+            self.network_sync_counter += 1       
+            return loss.item()
+
+From what is visible from 50 epochs the model trained to select the furthest pawn - because of frequent reward.
+What I can do more:
+- record playing the game by myself - expert data
+- add rewards for other behaviours like blockade, or give higher reward for 
