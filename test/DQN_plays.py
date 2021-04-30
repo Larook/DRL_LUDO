@@ -470,4 +470,4 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 if __name__ == '__main__':
     # unittest.main()
     # dqn_approach(do_random_walk=False, load_model=True, train=True, use_gpu=False)
-    dqn_approach(do_random_walk=True, load_model=True, train=True, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)

@@ -56,8 +56,8 @@ def enemy_pieces_nearby(player_id, state, horizon):
         for i in tiles_to_consider:
             if enemy_state[i] > 0:
                 # there is an enemy in our horizon!
-                print("whole state:")
-                print(state)
+                # print("whole state:")
+                # print(state)
                 return True
     return False
 
@@ -66,7 +66,7 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
     """
         • 1.0 for winning a game.
         • 0.25 for releasing a piece from HOME.
-    • 0.2 for defending a vulnerable piece.
+        • 0.2 for defending a vulnerable piece.
         • 0.15 for knocking an opponent’s piece.
         • 0.1 for moving the piece that is closest to home.
         • 0.05 for forming a blockade.
@@ -119,6 +119,13 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
     if furthest_piece == piece_to_move and furthest_dist != 0:
         reward += 0.1
         # exit('chosen furthest one')
+
+    # • -0.25 for getting a piece knocked in the next turn - next turn, not the next state!!!
+    """ for that will need to save the previous move's last state and see difference between state_new and state_begin of new turn """
+    # pieces_home_before = count_pieces_on_tile(player_i, state_begin, 0)
+    # pieces_home_after = count_pieces_on_tile(player_i, state_new, 0)
+    # if pieces_home_after > pieces_home_before:
+    #     reward -= 0.25
 
     # 0.05 for forming a blockade
     player_i = 0
