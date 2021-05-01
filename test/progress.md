@@ -264,7 +264,7 @@ From what is visible from 50 epochs the model trained to select the furthest paw
 What I can do more:
 - record playing the game by myself - expert data
     - add rewards for other behaviours like blockade - DONE
-- count the rewards got and plot the number of kills and blockades,  and stuff like this
+- count the rewards got and plot the number of kills and blockades and stuff like this
 - maybe reward of reaching the star (teleport)
 
 - when stuff is running - check the correctness of networks once again - check the no_grad and how it should be done - check also the learning
@@ -272,8 +272,10 @@ What I can do more:
 
 after 134 epochs:
     still chooses the furthest pawn
-    need to change rewards - when choosing furthest which is in the safe zone give less reward
-    or give negative reward when breaking the blockade and more points for getting out a fresh piece from home
+
+    need to change rewards - when choosing furthest which is in the safe zone give less reward - done
+    or give negative reward when breaking the blockade and more points for getting out a fresh piece from home ---
+    added reward for losing pieces
 
 maybe change learnig rate / batch size
 add more readable plots

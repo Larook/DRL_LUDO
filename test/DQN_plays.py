@@ -17,6 +17,7 @@ from Memory import *
 from Learning_Info import Learning_Info
 
 losses = []
+import config
 
 def get_game_state(pieces_seen_from_players):
     """
@@ -214,11 +215,6 @@ def optimize_model(game, batch, target_net, available_actions):
         losses.append({'loss': loss.item()})
         losses_this_action.append(loss.item())
         # print("loss.item() = ", loss.item())
-
-
-    #     if batch_num % 40 == 0:
-    #         print('\tEpoch %d | Batch %d | Loss %6.2f' % (epoch, batch_num, loss.item()))
-    # print('Epoch %d | Loss %6.2f' % (epoch, sum(losses) / len(losses)))
     loss_avg = np.mean(losses_this_action)
     return loss_avg
 
@@ -291,6 +287,8 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
 
 
 def dqn_approach(do_random_walk, load_model, train, use_gpu):
+
+    a = 0
 
     ai_agents = [0]  # which id of player should be played by ai?
     g = ludopy.Game()
@@ -367,6 +365,8 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
                 t_get_game_state = time.time()
                 begin_state = get_game_state(pieces[player_i])
+                if steps_done == 0:
+                    config.last_turn_state_new = begin_state
                 # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
 
                 t_action_selection = time.time()
@@ -469,5 +469,5 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
 if __name__ == '__main__':
     # unittest.main()
-    # dqn_approach(do_random_walk=False, load_model=True, train=True, use_gpu=False)
     dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    # dqn_approach(do_random_walk=True, load_model=False, train=True, use_gpu=False)

@@ -1,3 +1,4 @@
+import config
 
 
 def count_pieces_on_tile(player_no, state, tile_no):
@@ -27,8 +28,6 @@ def get_max_reward_from_state(game, state, possible_actions):
 def enemy_pieces_nearby(player_id, state, horizon):
     """ horizon - how far away pieces should be considered
     :return True when there are some pieces in danger """
-    ids_where_pieces_are_safe = [0, 1, range(53,59)]
-
     player_state = state[player_id]
     enemy_states = []
     for i in range(len(state)):
@@ -68,13 +67,17 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
         • 0.25 for releasing a piece from HOME.
         • 0.2 for defending a vulnerable piece.
         • 0.15 for knocking an opponent’s piece.
-        • 0.1 for moving the piece that is closest to home.
+        • 0.1 for moving the piece that is closest to home - if moved from safe space then only 0.05
         • 0.05 for forming a blockade.
     • -0.25 for getting a piece knocked in the next turn.
         • -1.0 for losing a game.
     """
     home_tile = 0
     finished_tile = 59
+    ids_where_pieces_are_safe = [1, range(53, 59)]
+    player_i = 0
+    state_diff = state_new[player_i] - state_begin[player_i]
+
     reward = 0
 
     knocked_pieces = 0
@@ -117,22 +120,35 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
             furthest_piece = piece
     # print("furthest_piece ", furthest_piece)
     if furthest_piece == piece_to_move and furthest_dist != 0:
-        reward += 0.1
+        # if the piece was in safe zone - smaller reward
+        piece_moved_from_safe_zone = False
+        for tile_id, value in enumerate(state_diff):
+            if value < 0 and tile_id not in ids_where_pieces_are_safe:
+                piece_moved_from_safe_zone = True
+        if piece_moved_from_safe_zone:
+            reward += 0.05
+        else:
+            reward += 0.1
         # exit('chosen furthest one')
 
-    # • -0.25 for getting a piece knocked in the next turn - next turn, not the next state!!!
-    """ for that will need to save the previous move's last state and see difference between state_new and state_begin of new turn """
-    # pieces_home_before = count_pieces_on_tile(player_i, state_begin, 0)
-    # pieces_home_after = count_pieces_on_tile(player_i, state_new, 0)
-    # if pieces_home_after > pieces_home_before:
-    #     reward -= 0.25
+    """ 
+    • -0.25 for getting a piece knocked in the next turn - next turn, not the next state
+    for that will need to save the previous move's last state and see difference between state_new and state_begin of new turn 
+    save the new state
+    """
+    pieces_last = count_pieces_on_tile(player_i, config.last_turn_state_new, 0)
+    pieces_now = count_pieces_on_tile(player_i, state_begin, 0)
+    if pieces_now > pieces_last:
+        reward -= 0.25
+        # print("config.last_turn_state_new \n", config.last_turn_state_new)
+        # print("state_begin \n", state_begin)
+        # exit("check loosing piece in next round")
 
     # 0.05 for forming a blockade
     player_i = 0
     # print("begin_state", state_begin[player_i])
     # print("new_state", state_new[player_i])
     if state_begin[player_i][0] != 1:
-        state_diff = state_new[player_i] - state_begin[player_i]
         # print("state_diff", state_diff)
         for tile_id, value in enumerate(state_diff):
             # when new pawn moved and moved in actual dangerous position
@@ -151,6 +167,9 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
                             reward += 0.15
                             # print("WE WERE IN DANGER, SIR!")
                             # exit("life saving blockade")
+
+    config.last_turn_state_new = state_new
+    # exit("test")
 
     if reward < 0:
         print('ENEMY ENDED THE GAME, reward = ', reward)
