@@ -286,9 +286,13 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
     return piece_to_move, new_state
 
 
-def dqn_approach(do_random_walk, load_model, train, use_gpu):
+def rewards_detected_reset():
+    config.rewards_detected = {'piece_release': 0, 'defend_vulnerable': 0, 'knock_opponent': 0,
+                    'move_closest_goal': 0, 'move_closest_safe': 0, 'forming_blockade': 0,
+                    'getting_piece_knocked_next_turn': 0}
 
-    a = 0
+
+def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
     ai_agents = [0]  # which id of player should be played by ai?
     g = ludopy.Game()
@@ -299,7 +303,8 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     if load_model:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
 
-        checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
+        # checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
+        checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
         epoch_last = 48
         q_net.load_state_dict(checkpoint)
     else:
@@ -374,7 +379,11 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
-                reward = get_reward(begin_state, action, new_state, pieces[player_i][player_i])  # immediate reward
+                reward, rewards_counter = get_reward(begin_state, action, new_state, pieces[player_i][player_i])  # immediate reward
+                if reward < -0.6:
+                    print('ENEMY ENDED THE GAME, reward = ', reward)
+                if reward >= 0.7:
+                    print('AI PLAYER ENDED THE GAME , reward', reward)
                 # print("<timing> t_get_reward =", time.time()-t_get_reward)
 
                 # save round observation to the memory
@@ -412,15 +421,16 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                 if player_i in ai_agents:
                     won_counter += 1
                     print("<!!!> player_ai won!! won_counter=", won_counter)
-                    if do_random_walk:
-                        exit("works! trying to reduce time of get_state_after_action()")
+                    # if do_random_walk:
+                    #     exit("works! trying to reduce time of get_state_after_action()")
 
             steps_done += 1
             if player_i in ai_agents:
                 avg_reward = np.array(rewards_info).mean()
                 learning_info_data.append(epoch_no=epoch, epochs_won=won_counter, ai_player_i=player_i,
                                           action_no=steps_done, begin_state=begin_state, dice_now=dice, action=action,
-                                          new_state=new_state, reward=reward, avg_reward=avg_reward, loss=loss_avg)
+                                          new_state=new_state, reward=reward, avg_reward=avg_reward, loss=loss_avg,
+                                          rewards_detected=rewards_counter)
 
             time_turn_end = time.time()
             time_turns.append(time_turn_end - time_turn_start)
@@ -452,6 +462,9 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         g = ludopy.Game()
         avg_time_left = (epochs - epoch) * avg_time_epoch
 
+        # reset rewards detected
+        rewards_detected_reset()
+
     df_losses = pd.DataFrame.from_records(losses)
     df_losses.to_csv('results/losses.csv')
     learning_info_data.save_to_csv('results/learning_info_data_x.csv', epoch_no=epoch)
@@ -469,5 +482,5 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
 if __name__ == '__main__':
     # unittest.main()
+    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
     dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
-    # dqn_approach(do_random_walk=True, load_model=False, train=True, use_gpu=False)
