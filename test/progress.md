@@ -278,4 +278,5 @@ after 134 epochs:
     added reward for losing pieces
 
 maybe change learnig rate / batch size
-add more readable plots - seems like the counter for the rewards taken is too high
+add more readable plots - seems like the counter for the rewards taken is too high - only on live plot
+seems like knocking out pieces is wrong! - fixed

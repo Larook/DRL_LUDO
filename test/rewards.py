@@ -102,12 +102,16 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
     for player_i in range(1, 4):
         # first check knocking out enemies and if game already won by enemies
         # check if enemies return home - detect knocked opponents
-        in_home_before = count_pieces_on_tile(player_no=player_i, state=state_begin, tile_no=home_tile)
-        in_home_after = count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=home_tile)
+        # in_home_before = count_pieces_on_tile(player_no=player_i, state=state_begin, tile_no=home_tile)
+        in_home_before = state_begin[player_i][0]
+        in_home_after = state_new[player_i][0]
         if in_home_after > in_home_before:
             reward += 0.15
             knocked_pieces += 1  # debug only
             config.rewards_detected['knock_opponent'] += 1
+            # print("state_begin\n", state_begin)
+            # print("state_new\n", state_new)
+            # exit('Check kocking oponnent 39')
 
         # check if any of the opponents won the game
         if count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=finished_tile) == 4:
