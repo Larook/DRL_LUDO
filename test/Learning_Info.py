@@ -38,7 +38,7 @@ class Learning_Info():
 
     def save_plot_progress(self, bath_size, epoch_no, is_random_walk):
 
-        fig, axes = plt.subplots(nrows=2, ncols=1)
+        fig, axes = plt.subplots(nrows=3, ncols=1)
         title = "batch = " + str(bath_size) + ", epochs = " + str(epoch_no)
         if is_random_walk:
             title = "randW_" + title
@@ -47,6 +47,8 @@ class Learning_Info():
         self.data_df.plot(y=['loss', 'avg_reward', 'avg_reward_this_epoch'], figsize=(30, 10), ax=axes[0])
         self.data_df.plot(y=['piece_release', 'knock_opponent', 'move_closest_goal', 'move_closest_safe', 'forming_blockade',
                    'defend_vulnerable', 'getting_piece_knocked_next_turn'], figsize=(30, 10), ax=axes[1])
+        winr = self.data_df.plot(y=['winrate'], figsize=(30, 10), ax=axes[2])
+        winr.hlines(0.25, winr.get_xticks().min(), winr.get_xticks().max(), linestyle='--', color='pink')
 
         plt.savefig("results/plots/" + title + ".jpg")
 

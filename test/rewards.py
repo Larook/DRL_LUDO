@@ -62,7 +62,7 @@ def enemy_pieces_nearby(player_id, state, horizon):
     return False
 
 
-def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
+def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_action=False):
     """
         • 1.0 for winning a game.
         • 0.25 for releasing a piece from HOME.
@@ -108,7 +108,8 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
         if in_home_after > in_home_before:
             reward += 0.15
             knocked_pieces += 1  # debug only
-            config.rewards_detected['knock_opponent'] += 1
+            if actual_action:
+                config.rewards_detected['knock_opponent'] += 1
             # print("state_begin\n", state_begin)
             # print("state_new\n", state_new)
             # exit('Check kocking oponnent 39')
@@ -123,7 +124,8 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
     in_home_after = count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=home_tile)
     if in_home_after < in_home_before:
         reward += 0.25
-        config.rewards_detected['piece_release'] += 1
+        if actual_action:
+            config.rewards_detected['piece_release'] += 1
 
     # check the end of the game
     if enemies_already_won:
@@ -149,10 +151,12 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
                 piece_moved_from_safe_zone = True
         if piece_moved_from_safe_zone:
             reward += 0.05
-            config.rewards_detected['move_closest_safe'] += 1
+            if actual_action:
+                config.rewards_detected['move_closest_safe'] += 1
         else:
             reward += 0.1
-            config.rewards_detected['move_closest_goal'] += 1
+            if actual_action:
+                config.rewards_detected['move_closest_goal'] += 1
         # exit('chosen furthest one')
 
     """ 
@@ -164,7 +168,8 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
     pieces_now = count_pieces_on_tile(player_i, state_begin, 0)
     if pieces_now > pieces_last:
         reward -= 0.25
-        config.rewards_detected['getting_piece_knocked_next_turn'] += 1
+        if actual_action:
+            config.rewards_detected['getting_piece_knocked_next_turn'] += 1
         # print("config.last_turn_state_new \n", config.last_turn_state_new)
         # print("state_begin \n", state_begin)
         # exit("check loosing piece in next round")
@@ -183,7 +188,8 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
                 if pieces_there_after > 1:
                     if pieces_there_after > count_pieces_on_tile(player_i, state_begin, tile_id):
                         reward += 0.05
-                        config.rewards_detected['forming_blockade'] += 1
+                        if actual_action:
+                            config.rewards_detected['forming_blockade'] += 1
                         # print("MADE A BLOCKADE, SIR!")
                         # exit("blockade check")
 
@@ -191,7 +197,8 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now):
                         #     • 0.2 for defending a vulnerable piece.
                         if enemy_pieces_nearby(player_id=player_i, state=state_new, horizon=6):
                             reward += 0.15
-                            config.rewards_detected['defend_vulnerable'] += 1
+                            if actual_action:
+                                config.rewards_detected['defend_vulnerable'] += 1
                             # print("WE WERE IN DANGER, SIR!")
                             # exit("life saving blockade")
 

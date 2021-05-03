@@ -277,6 +277,10 @@ after 134 epochs:
     or give negative reward when breaking the blockade and more points for getting out a fresh piece from home ---
     added reward for losing pieces
 
-maybe change learnig rate / batch size
+maybe change learning rate / batch size
 add more readable plots - seems like the counter for the rewards taken is too high - only on live plot
 seems like knocking out pieces is wrong! - fixed
+
+maybe value forming a blockade more than selecting furhtest piece.
+
+after 222 epochs winrate is still around 28% with random players - which seem random. Things to change would be probably the batch size or again reading more about DQN. 
