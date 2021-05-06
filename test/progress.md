@@ -264,7 +264,7 @@ From what is visible from 50 epochs the model trained to select the furthest paw
 What I can do more:
 - record playing the game by myself - expert data
     - add rewards for other behaviours like blockade - DONE
-    - count the rewards got and plot the number of kills and blockades and stuff like this
+    - count the rewards got and plot the number of kills and blockades and stuff like this (print also won and lost games in rewards plotting)
 - maybe reward for reaching the star (teleport)
 
 - when stuff is running - check the correctness of networks once again - check the no_grad and how it should be done - check also the learning
@@ -284,3 +284,8 @@ seems like knocking out pieces is wrong! - fixed
 maybe value forming a blockade more than selecting furhtest piece.
 
 after 222 epochs winrate is still around 28% with random players - which seem random. Things to change would be probably the batch size or again reading more about DQN. 
+    
+    change x axis to number of epochs
+    plot the decision making epsilon and maybe add learning rate?
+    
+read more on the stuff!

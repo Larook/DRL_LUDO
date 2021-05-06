@@ -73,20 +73,6 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_
         • -0.25 for getting a piece knocked in the next turn.
         • -1.0 for losing a game.
     """
-    # rewards_detected = namedtuple('rewards_detected', ['piece_release', 'defend_vulnerable', 'knock_opponent',
-    #                               'move_closest_goal', 'move_closest_safe', 'forming_blockade',
-    #                               'getting_piece_knocked_next_turn'])
-
-    # rewards_detected = {'piece_release': 0, 'defend_vulnerable': 0, 'knock_opponent': 0,
-    #                               'move_closest_goal': 0, 'move_closest_safe': 0, 'forming_blockade': 0,
-    #                               'getting_piece_knocked_next_turn': 0}
-    # rewards_detected.piece_release = 0
-    # rewards_detected.defend_vulnerable = 0
-    # rewards_detected.knock_opponent = 0
-    # rewards_detected.move_closest_goal = 0
-    # rewards_detected.move_closest_safe = 0
-    # rewards_detected.forming_blockade = 0
-    # rewards_detected.getting_piece_knocked_next_turn = 0
 
     home_tile = 0
     finished_tile = 59
@@ -130,9 +116,11 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_
     # check the end of the game
     if enemies_already_won:
         reward -= 1
+        config.rewards_detected['ai_agent_lost'] += 25
     elif count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=finished_tile) == 4:
         # print("player 0 wins the game in this round")
         reward += 1
+        config.rewards_detected['ai_agent_won'] += 25
 
     # check if moved piece is the furthest away
     furthest_piece, furthest_dist = 0, 0

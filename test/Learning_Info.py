@@ -10,8 +10,8 @@ class Learning_Info():
         self.whole_list = []
         self.rewards_each_epoch = []
 
-    def append(self, epoch_no, epochs_won, action_no, ai_player_i, begin_state, dice_now, action, new_state,
-               reward, avg_reward, loss, rewards_detected):
+    def update(self, epoch_no, epochs_won, action_no, ai_player_i, begin_state, dice_now, action, new_state,
+               reward, avg_reward, loss, rewards_info, epsilon_now):
         avg_reward_this_epoch = 0
         self.rewards_each_epoch.append(reward)
         winrate = epochs_won/epoch_no
@@ -22,13 +22,16 @@ class Learning_Info():
                                 'action': action, 'new_state': new_state, 'reward': reward, 'avg_reward': avg_reward,
                                 'avg_reward_this_epoch': np.array(self.rewards_each_epoch).mean(),
                                 'loss': loss,
-                                'piece_release': rewards_detected['piece_release'],
-                                'knock_opponent': rewards_detected['knock_opponent'],
-                                'move_closest_goal': rewards_detected['move_closest_goal'],
-                                'move_closest_safe': rewards_detected['move_closest_safe'],
-                                'forming_blockade': rewards_detected['forming_blockade'],
-                                'defend_vulnerable': rewards_detected['defend_vulnerable'],
-                                'getting_piece_knocked_next_turn': rewards_detected['getting_piece_knocked_next_turn'],
+                                'piece_release': rewards_info['piece_release'],
+                                'knock_opponent': rewards_info['knock_opponent'],
+                                'move_closest_goal': rewards_info['move_closest_goal'],
+                                'move_closest_safe': rewards_info['move_closest_safe'],
+                                'forming_blockade': rewards_info['forming_blockade'],
+                                'defend_vulnerable': rewards_info['defend_vulnerable'],
+                                'getting_piece_knocked_next_turn': rewards_info['getting_piece_knocked_next_turn'],
+                                'ai_agent_won': rewards_info['ai_agent_won'],
+                                'ai_agent_lost': rewards_info['ai_agent_lost'],
+                                'epsilon_now': epsilon_now
                                 })
 
     def save_to_csv(self, path, epoch_no):
@@ -38,7 +41,7 @@ class Learning_Info():
 
     def save_plot_progress(self, bath_size, epoch_no, is_random_walk):
 
-        fig, axes = plt.subplots(nrows=3, ncols=1)
+        fig, axes = plt.subplots(nrows=4, ncols=1)
         title = "batch = " + str(bath_size) + ", epochs = " + str(epoch_no)
         if is_random_walk:
             title = "randW_" + title
@@ -46,9 +49,10 @@ class Learning_Info():
 
         self.data_df.plot(y=['loss', 'avg_reward', 'avg_reward_this_epoch'], figsize=(30, 10), ax=axes[0])
         self.data_df.plot(y=['piece_release', 'knock_opponent', 'move_closest_goal', 'move_closest_safe', 'forming_blockade',
-                   'defend_vulnerable', 'getting_piece_knocked_next_turn'], figsize=(30, 10), ax=axes[1])
+                   'defend_vulnerable', 'getting_piece_knocked_next_turn', 'ai_agent_won', 'ai_agent_lost'], figsize=(30, 10), ax=axes[1])
         winr = self.data_df.plot(y=['winrate'], figsize=(30, 10), ax=axes[2])
         winr.hlines(0.25, winr.get_xticks().min(), winr.get_xticks().max(), linestyle='--', color='pink')
+        self.data_df.plot(y=['epoch_no'], figsize=(30, 10), ax=axes[3])
 
         plt.savefig("results/plots/" + title + ".jpg")
 

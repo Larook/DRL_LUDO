@@ -257,6 +257,7 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
         # epsilon greedy
         sample = random.random()
         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY)
+        config.epsilon_now = eps_threshold
         # print("eps_threshold = ", eps_threshold)
         steps_done += 1
 
@@ -289,7 +290,7 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
 def rewards_detected_reset():
     config.rewards_detected = {'piece_release': 0, 'defend_vulnerable': 0, 'knock_opponent': 0,
                     'move_closest_goal': 0, 'move_closest_safe': 0, 'forming_blockade': 0,
-                    'getting_piece_knocked_next_turn': 0}
+                    'getting_piece_knocked_next_turn': 0, 'ai_agent_won': 0, 'ai_agent_lost': 0}
 
 
 def dqn_approach(do_random_walk, load_model, train, use_gpu):
@@ -399,8 +400,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
                     """ prepeare training data """
                     batch = memory.sample(memory.capacity)
-                    batchLen = len(batch)
-                    if batchLen >= BATCH_SIZE:  # doesnt train when not enough samples in memory
+                    if len(batch) >= BATCH_SIZE:  # doesnt train when not enough samples in memory
 
                         """ synchronise the networks if needed """
                         if (network_sync_counter == network_sync_freq):
@@ -431,19 +431,19 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
             steps_done += 1
             if player_i in ai_agents:
                 avg_reward = np.array(rewards_info).mean()
-                learning_info_data.append(epoch_no=epoch, epochs_won=won_counter, ai_player_i=player_i,
+                learning_info_data.update(epoch_no=epoch, epochs_won=won_counter, ai_player_i=player_i,
                                           action_no=steps_done, begin_state=begin_state, dice_now=dice, action=action,
                                           new_state=new_state, reward=reward, avg_reward=avg_reward, loss=loss_avg,
-                                          rewards_detected=rewards_counter)
+                                          rewards_info=rewards_counter, epsilon_now=config.epsilon_now)
 
             time_turn_end = time.time()
             time_turns.append(time_turn_end - time_turn_start)
             avg_time_turn = np.mean(time_turns)
             if steps_done % 10 == 0:
-                print("epoch = %d | round = %d "
-                      "<avg_time_left = %.2f avg_time_epoch = %.2f | avg_time_turn = %.2f> "
-                      "| won_counter = %d | steps_done = %d | action = %d | avg_reward = %f, loss_avg = %f" %
-                      (epoch, g.round, avg_time_left, avg_time_epoch, avg_time_turn, won_counter, steps_done, action, avg_reward, loss_avg))
+                print("epoch = %d | round = %d <avg_time_left = %.2f avg_time_epoch = %.2f | avg_time_turn = %.2f> "
+                      "| won_counter = %d | steps_done = %d | action = %d | avg_reward = %f, loss_avg = %f "
+                      "| epsilon = %f" % (epoch, g.round, avg_time_left, avg_time_epoch, avg_time_turn, won_counter,
+                                          steps_done, action, avg_reward, loss_avg, config.epsilon_now))
         time_epoch_end = time.time()
         time_epochs.append(time_epoch_end-time_epoch_start)
         avg_time_epoch = np.mean(time_epochs)
@@ -487,5 +487,5 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 if __name__ == '__main__':
     # unittest.main()
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
-    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
-    dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
