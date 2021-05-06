@@ -304,13 +304,15 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
 
         # checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
-        checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
-        epoch_last = 48
+        # checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
+        checkpoint = torch.load('results/models/model_test_219_epochs_all_rewards.pth')
+        epoch_last = 219
         q_net.load_state_dict(checkpoint)
     else:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
     if not train:
-        q_net.model.eval()
+        epoch_last = 1
+        q_net.eval()
 
     """ target_net - this target network is used to generate target values or ground truth. 
     The weights of this network are held fixed for a fixed number of training steps after which these are updated with the weight of Main Network. 
@@ -337,6 +339,8 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     loss_avg = 0
 
     epochs = 1000
+    if not train:
+        epochs = 1000
     steps_done = 0
 
     if load_model:
@@ -483,4 +487,5 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 if __name__ == '__main__':
     # unittest.main()
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
-    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
