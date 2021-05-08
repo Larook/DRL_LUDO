@@ -2,14 +2,23 @@ import time
 import unittest
 import sys
 import numpy as np
+import pandas as pd
 
 from ludopy import make_img_of_board
 from ludopy.visualizer import draw_basic_board
+from DQN_plays import get_game_state, get_state_after_action, get_reshaped_ann_input
 
 sys.path.append("../")
 
 from matplotlib import pyplot as plt
+import datetime
 
+from pydub import AudioSegment
+from pydub.playback import play
+# Input an existing mp3 filename
+mp3File = 'human_data/Bruh-Sound-Effect.mp3'
+# load the file into pydub
+music = AudioSegment.from_mp3(mp3File)
 
 def prRed(skk): print("\033[91m {}\033[00m".format(skk))
 def prGreen(skk): print("\033[92m {}\033[00m".format(skk))
@@ -30,6 +39,7 @@ def show_start_board():
 def show_board(g):
     board_img = make_img_of_board(*g.hist[-1])
     plt.imshow(board_img, interpolation='nearest')
+    plt.tight_layout()
     plt.draw()
     plt.pause(0.005)
 
@@ -43,6 +53,7 @@ def choose_the_action(move_pieces):
             piece_to_move = int(piece_to_move)
     return piece_to_move
 
+
 def get_expert_data():
     import ludopy
     import numpy as np
@@ -50,6 +61,8 @@ def get_expert_data():
     player_0_won = False
     turns_passed = 0
     ai_agents = [0]  # which id of player should be played by ai?
+
+    expert_data_l = []
 
     while not player_0_won:
         g = ludopy.Game()
@@ -60,9 +73,6 @@ def get_expert_data():
         while not there_is_a_winner:
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner,
              there_is_a_winner), player_i = g.get_observation()
-
-            # show state of the map
-            show_board(g)
 
             """ let computer players do their actions """
             if player_i not in ai_agents:
@@ -79,26 +89,46 @@ def get_expert_data():
                     if len(move_pieces) == 1:
                         piece_to_move = move_pieces[0]
                     else:
+                        begin_state = get_game_state(g.get_pieces()[player_i])
+                        show_board(g)  # show state of the map
                         # ask for action
-                        prRed("<DICE=%d>please choose an action to take\tavailable_actions(pieces): %s" % (dice, move_pieces))
+                        play(music)
+                        prGreen("<DICE=%d>please choose an action to take\tavailable_actions(pieces): %s" % (dice, move_pieces))
                         piece_to_move = choose_the_action(move_pieces)
                         print("piece_to_move = ", piece_to_move)
+                        new_state = get_state_after_action(g, piece_to_move)
 
-                if len(move_pieces):
-                    piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]
+                        round_info = {'round': g.round, 'dice': dice, 'begin_state': begin_state,
+                                      'action': piece_to_move, 'new_state': new_state,
+                                      'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move)}
+                        expert_data_l.append(round_info)
+
                 else:
                     piece_to_move = -1
 
             """ perform action and end round """
             _, _, _, _, _, there_is_a_winner = g.answer_observation(piece_to_move)
-            # g.__add_to_hist()
             show_board(g)
+            # there_is_a_winner = True  # FOR CHECKING THE SAVING
 
             # exit("end of round!")
-            if there_is_a_winner and player_i == 0:
-                player_0_won = True
+            if there_is_a_winner:
+                play(music)
+                play(music)
+                play(music)
+                prCyan("GAME IS DONE")
+                if player_i == 0:
+                    player_0_won = True
+                    prCyan("YOU WON!")
             # turns_passed += 1
             # print("turns_passed = ", turns_passed)
+
+    now = datetime.datetime.now()
+    print(now.year, now.month, now.day, now.hour, now.minute, now.second)
+    print("Saving moves and states to csv")
+    df_game = pd.DataFrame(expert_data_l)
+    df_game.to_csv('human_data/game_' + str(now.day) +'_'+ str(now.hour) +'_'+ str(now.minute) +'_'+ '.csv')
+
     print("Saving history to numpy file")
     g.save_hist("game_history.npy")
     print("Saving game video")

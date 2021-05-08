@@ -44,6 +44,7 @@ def get_game_state(pieces_seen_from_players):
     # print("state_all", state_all)
     return state_all
 
+
 def get_pawn_id_from_tile(tile_id, player_pieces):
     """
     get the id of a random pawn that is located on the tile_id

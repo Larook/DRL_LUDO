@@ -291,18 +291,14 @@ after 222 epochs winrate is still around 28% with random players - which seem ra
 read more on the stuff!
 
 Recording the moves:
-    when two pieces are out, eg: available_actions(pieces): [0 2]
-    choosing 2 will move the one closer to home (further away from home), regardless of the ID of the piece!!!
-    choosing 0 moves the further piece
+    WORKS
 
-    <DICE=6>please choose an action to take	available_actions(pieces): [0 1 2 3]
-    chosen 3: and the new piece got out of home - good
-then 2 again moves the piece in the middle
-what will happen when piece 2 will overtake piece 0?
-when 2 chosen instead of moving the middle piece, the one that just got out of home got moved!!! - WRONG
-but then again moving the 2 moved the middle one!!!
-and then again moving 2 moved the last one! WHY DOES THAT HAPPEN?
+Stars WORK
 
+Globrs WORK
+
+TODO:
+    add rewards for going to GLOBES and STARS and then record the state of the games and feed the neural net
 
 
 
