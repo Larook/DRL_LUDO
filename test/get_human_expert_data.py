@@ -7,6 +7,8 @@ import pandas as pd
 from ludopy import make_img_of_board
 from ludopy.visualizer import draw_basic_board
 from DQN_plays import get_game_state, get_state_after_action, get_reshaped_ann_input
+from rewards import get_reward
+import config
 
 sys.path.append("../")
 
@@ -66,63 +68,62 @@ def get_expert_data():
 
     expert_data_l = []
 
-    while not player_0_won:
-        g = ludopy.Game()
-        there_is_a_winner = False
-        show_start_board()
-        prCyan("Start of the new game!")
+    g = ludopy.Game()
+    there_is_a_winner = False
+    show_start_board()
+    prCyan("Start of the new game!")
 
-        while not there_is_a_winner:
-            (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner,
-             there_is_a_winner), player_i = g.get_observation()
+    while not there_is_a_winner:
+        (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner,
+         there_is_a_winner), player_i = g.get_observation()
 
-            """ let computer players do their actions """
-            if player_i not in ai_agents:
-                if len(move_pieces) > 0:
-                    piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
+        """ let computer players do their actions """
+        if player_i not in ai_agents:
+            if len(move_pieces) > 0:
+                piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
+            else:
+                piece_to_move = -1
+
+        else:
+            """ select an action of AI player """
+            if len(move_pieces):
+                if len(move_pieces) == 1:
+                    piece_to_move = move_pieces[0]
                 else:
-                    piece_to_move = -1
+                    begin_state = get_game_state(g.get_pieces()[player_i])
+                    show_board(g)  # show state of the map
+                    # ask for action
+                    play(music)
+                    prGreen("<DICE=%d>please choose an action to take\tavailable_actions(pieces): %s" % (dice, move_pieces))
+                    piece_to_move = choose_the_action(move_pieces)
+                    new_state = get_state_after_action(g, piece_to_move)
+
+                    round_info = {'round': g.round, 'dice': dice, 'begin_state': begin_state,
+                                  'action': piece_to_move, 'new_state': new_state,
+                                  'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move)}
+                    expert_data_l.append(round_info)
+
+                    reward, _ = get_reward(begin_state, piece_to_move, new_state, g.get_pieces()[player_i][player_i],
+                                                         actual_action=True)  # immediate reward
+                    print("piece_to_move = %d | reward = %f " % (piece_to_move, reward))
 
             else:
+                piece_to_move = -1
 
-                """ select an action of AI player """
-                if len(move_pieces):
-                    if len(move_pieces) == 1:
-                        piece_to_move = move_pieces[0]
-                    else:
-                        begin_state = get_game_state(g.get_pieces()[player_i])
-                        show_board(g)  # show state of the map
-                        # ask for action
-                        play(music)
-                        prGreen("<DICE=%d>please choose an action to take\tavailable_actions(pieces): %s" % (dice, move_pieces))
-                        piece_to_move = choose_the_action(move_pieces)
-                        print("piece_to_move = ", piece_to_move)
-                        new_state = get_state_after_action(g, piece_to_move)
+        """ perform action and end round """
+        _, _, _, _, _, there_is_a_winner = g.answer_observation(piece_to_move)
+        show_board(g)
+        # there_is_a_winner = True  # FOR CHECKING THE SAVING
 
-                        round_info = {'round': g.round, 'dice': dice, 'begin_state': begin_state,
-                                      'action': piece_to_move, 'new_state': new_state,
-                                      'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move)}
-                        expert_data_l.append(round_info)
-
-                else:
-                    piece_to_move = -1
-
-            """ perform action and end round """
-            _, _, _, _, _, there_is_a_winner = g.answer_observation(piece_to_move)
-            # show_board(g)
-            # there_is_a_winner = True  # FOR CHECKING THE SAVING
-
-            # exit("end of round!")
-            if there_is_a_winner:
-                play(music)
-                play(music)
-                play(music)
-                prCyan("GAME IS DONE")
-                if player_i == 0:
-                    player_0_won = True
-                    prCyan("YOU WON!")
-            # turns_passed += 1
-            # print("turns_passed = ", turns_passed)
+        # exit("end of round!")
+        if there_is_a_winner:
+            play(music)
+            play(music)
+            play(music)
+            prCyan("GAME IS DONE")
+            if player_i == 0:
+                player_0_won = True
+                prCyan("YOU WON!")
 
     now = datetime.datetime.now()
     print(now.year, now.month, now.day, now.hour, now.minute, now.second)
