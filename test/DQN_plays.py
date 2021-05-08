@@ -289,9 +289,7 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
 
 
 def rewards_detected_reset():
-    config.rewards_detected = {'piece_release': 0, 'defend_vulnerable': 0, 'knock_opponent': 0,
-                    'move_closest_goal': 0, 'move_closest_safe': 0, 'forming_blockade': 0,
-                    'getting_piece_knocked_next_turn': 0, 'ai_agent_won': 0, 'ai_agent_lost': 0}
+    config.rewards_detected = config.init_rewards_couter_dict()
 
 
 def dqn_approach(do_random_walk, load_model, train, use_gpu):
@@ -467,7 +465,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         g = ludopy.Game()
         avg_time_left = (epochs - epoch) * avg_time_epoch
 
-        # reset rewards detected
+        # reset rewards detected after epoch
         rewards_detected_reset()
 
     df_losses = pd.DataFrame.from_records(losses)

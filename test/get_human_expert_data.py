@@ -29,12 +29,14 @@ def prCyan(skk): print("\033[96m {}\033[00m".format(skk))
 def prLightGray(skk): print("\033[97m {}\033[00m".format(skk))
 def prBlack(skk): print("\033[98m {}\033[00m".format(skk))
 
+
 def show_start_board():
     board_img = draw_basic_board()
     plt.imshow(board_img, interpolation='nearest')
     plt.draw()
     plt.pause(0.005)
     time.sleep(0.01)
+
 
 def show_board(g):
     board_img = make_img_of_board(*g.hist[-1])
@@ -82,7 +84,6 @@ def get_expert_data():
                     piece_to_move = -1
 
             else:
-                # show_board(g)
 
                 """ select an action of AI player """
                 if len(move_pieces):
@@ -108,7 +109,7 @@ def get_expert_data():
 
             """ perform action and end round """
             _, _, _, _, _, there_is_a_winner = g.answer_observation(piece_to_move)
-            show_board(g)
+            # show_board(g)
             # there_is_a_winner = True  # FOR CHECKING THE SAVING
 
             # exit("end of round!")

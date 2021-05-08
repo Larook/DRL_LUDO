@@ -72,10 +72,11 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_
         • 0.05 for forming a blockade.
         • -0.25 for getting a piece knocked in the next turn.
         • -1.0 for losing a game.
+
+        • go on globe (safe) 0.12
+        • use a star (speed) 0.17
     """
 
-    home_tile = 0
-    finished_tile = 59
     ids_where_pieces_are_safe = [1, range(53, 59)]
     player_i = 0
     state_diff = state_new[player_i] - state_begin[player_i]
@@ -101,13 +102,13 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_
             # exit('Check kocking oponnent 39')
 
         # check if any of the opponents won the game
-        if count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=finished_tile) == 4:
+        if count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=config.finished_tile) == 4:
             enemies_already_won = True
 
     # check leaving the home for current player and finishing the game
     player_i = 0
-    in_home_before = count_pieces_on_tile(player_no=player_i, state=state_begin, tile_no=home_tile)
-    in_home_after = count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=home_tile)
+    in_home_before = count_pieces_on_tile(player_no=player_i, state=state_begin, tile_no=config.home_tile)
+    in_home_after = count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=config.home_tile)
     if in_home_after < in_home_before:
         reward += 0.25
         if actual_action:
@@ -117,7 +118,7 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_
     if enemies_already_won:
         reward -= 1
         config.rewards_detected['ai_agent_lost'] += 25
-    elif count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=finished_tile) == 4:
+    elif count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=config.finished_tile) == 4:
         # print("player 0 wins the game in this round")
         reward += 1
         config.rewards_detected['ai_agent_won'] += 25
@@ -189,6 +190,23 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_
                                 config.rewards_detected['defend_vulnerable'] += 1
                             # print("WE WERE IN DANGER, SIR!")
                             # exit("life saving blockade")
+
+    """ • go on globe (safe) 0.12 """
+    for globe_tile in config.globe_tiles:
+        pieces_globe_begin = count_pieces_on_tile(player_i, state_begin, globe_tile)
+        pieces_globe_new = count_pieces_on_tile(player_i, state_begin, globe_tile)
+        if pieces_globe_new > pieces_globe_begin:
+            reward += 0.12
+            config.rewards_detected['moved_on_safe_globe'] += 1
+
+    """ • using a star (speed) 0.17 """
+    for globe_tile in config.star_tiles:
+        pieces_globe_begin = count_pieces_on_tile(player_i, state_begin, globe_tile)
+        pieces_globe_new = count_pieces_on_tile(player_i, state_begin, globe_tile)
+        if pieces_globe_new > pieces_globe_begin:
+            reward += 0.17
+            config.rewards_detected['speed_boost_star'] += 1
+
 
     config.last_turn_state_new = state_new
     # exit("test")

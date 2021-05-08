@@ -290,13 +290,6 @@ after 222 epochs winrate is still around 28% with random players - which seem ra
     
 read more on the stuff!
 
-Recording the moves:
-    WORKS
-
-Stars WORK
-
-Globrs WORK
-
 TODO:
     add rewards for going to GLOBES and STARS and then record the state of the games and feed the neural net
 
