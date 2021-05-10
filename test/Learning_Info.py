@@ -29,6 +29,8 @@ class Learning_Info():
                                 'forming_blockade': rewards_info['forming_blockade'],
                                 'defend_vulnerable': rewards_info['defend_vulnerable'],
                                 'getting_piece_knocked_next_turn': rewards_info['getting_piece_knocked_next_turn'],
+                                'moved_on_safe_globe': rewards_info['moved_on_safe_globe'],
+                                'speed_boost_star': rewards_info['speed_boost_star'],
                                 'ai_agent_won': rewards_info['ai_agent_won'],
                                 'ai_agent_lost': rewards_info['ai_agent_lost'],
                                 'epsilon_now': epsilon_now

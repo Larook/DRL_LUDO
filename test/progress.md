@@ -299,6 +299,10 @@ especially:
 
 get_max_reward_from_state(game, s_, available_actions)
     get_state_after_action(game, action)
+
+    add plot counter info about new rewards
+    tune the epsilon to settle down after 50 games
+
     
 
 

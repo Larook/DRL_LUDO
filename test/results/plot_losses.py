@@ -15,6 +15,7 @@ if __name__ == "__main__":
     # df.plot(y=['piece_release', 'knock_opponent', 'move_closest_goal', 'move_closest_safe', 'forming_blockade',
     #            'defend_vulnerable', 'getting_piece_knocked_next_turn', 'ai_agent_won', 'ai_agent_lost'], figsize=(30, 10), ax=axes[1])
     df.plot(y=['piece_release', 'knock_opponent', 'move_closest_goal', 'move_closest_safe', 'forming_blockade',
+               'moved_on_safe_globe', 'speed_boost_star',
                'defend_vulnerable', 'getting_piece_knocked_next_turn'],
             figsize=(30, 10), ax=axes[1])
     winr = df.plot( y=['winrate', 'epsilon_now'], figsize=(30, 10), ax=axes[2])

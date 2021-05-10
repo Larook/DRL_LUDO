@@ -56,6 +56,7 @@ def get_pawn_id_from_tile(tile_id, player_pieces):
             best_pawn_id = i
             return best_pawn_id
 
+
 def get_reshaped_ann_input(begin_state, new_state, action):
     """ save STATE and ACTION into 1-dimensional np.array. This should be an input to a ANN """
     # look for the position of the given pawn before and after a move
@@ -230,15 +231,14 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
     :param steps_done:
     :return:
     """
-    # steps_done for 10 games ~= 3380
+    """ !!! check help/tweak_epsilon.py """
     EPS_START = 0.9
     EPS_END = 0.05
-    # EPS_DECAY = 1000  # after 10 games eps_threshold=0.0789
-    EPS_DECAY = 18000  # after 10 games eps_threshold=0.754 -> after 100 games: 0.17999013613686377 and reaches EPS_END after 1000 plays
+    EPS_DECAY = 10000  # after 10 games eps_threshold=0.053
 
     if len(move_pieces):
         action_q_l = []
-        best_Q_val = -99999999999999
+        best_Q_val = -9999999999
 
         for possible_action in move_pieces:
             # get piece with best Q
@@ -257,7 +257,9 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
 
         # epsilon greedy
         sample = random.random()
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY)
+        # eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY)
+        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.7 * steps_done / EPS_DECAY)
+
         config.epsilon_now = eps_threshold
         # print("eps_threshold = ", eps_threshold)
         steps_done += 1

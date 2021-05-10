@@ -4,7 +4,8 @@ def init_rewards_couter_dict():
                     'getting_piece_knocked_next_turn': 0,
                     'moved_on_safe_globe': 0,
                     'speed_boost_star': 0,
-                    'ai_agent_won': 0, 'ai_agent_lost': 0}
+                    'ai_agent_won': 0, 'ai_agent_lost': 0,
+            }
 
 
 last_turn_state_new = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
