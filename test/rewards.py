@@ -18,7 +18,7 @@ def get_max_reward_from_state(game, state, possible_actions):
         new_state = get_state_after_action(game, action)
 
         # get reward
-        reward, _ = get_reward(state, action, new_state, pieces_player_now=game.get_pieces()[game.current_player][game.current_player])
+        reward, _ = get_reward(state, action, new_state, pieces_player_begin=game.get_pieces()[game.current_player][game.current_player])
         # reward = get_reward(state, action, new_state)
         if reward >= max_reward:
             max_reward = reward
@@ -62,7 +62,7 @@ def enemy_pieces_nearby(player_id, state, horizon):
     return False
 
 
-def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_action=False):
+def get_reward(state_begin, piece_to_move, state_new, pieces_player_begin, actual_action=False):
     """
         • 1.0 for winning a game.
         • 0.25 for releasing a piece from HOME.
@@ -123,13 +123,14 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_now, actual_
         reward += 1
         config.rewards_detected['ai_agent_won'] += 1
 
+    """ furthest piece away """
     # check if moved piece is the furthest away
     furthest_piece, furthest_dist = 0, 0
     # print("pieces_player_now", pieces_player_now)
-    for piece in range(len(pieces_player_now)):
+    for piece in range(len(pieces_player_begin)):
         # print("pieces_player_now[piece]", pieces_player_now[piece])
-        if pieces_player_now[piece] >= furthest_dist:
-            furthest_dist = pieces_player_now[piece]
+        if pieces_player_begin[piece] >= furthest_dist:
+            furthest_dist = pieces_player_begin[piece]
             furthest_piece = piece
     # print("furthest_piece ", furthest_piece)
     if furthest_piece == piece_to_move and furthest_dist != 0:

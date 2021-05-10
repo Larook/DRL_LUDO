@@ -293,6 +293,13 @@ read more on the stuff!
 TODO:
     add rewards for going to GLOBES and STARS and then record the state of the games and feed the neural net
 
+Ok it turned out that data acquired is not enough, will need to run again the human recordings
+Before that double check if everything needed is saved
+especially:
+
+get_max_reward_from_state(game, s_, available_actions)
+    get_state_after_action(game, action)
+    
 
 
 

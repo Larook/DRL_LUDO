@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 
@@ -33,56 +34,73 @@ def get_fixed_row_from_str(row_d):
                 row_d[key] = int(row_d[key])
 
             else:
-                print("fix str to list", type(row_d[key]), row_d[key])
-                # list_from_str = ast.literal_eval(row_d[key])
-                # list_from_str = np.fromstring(row_d[key], int)
-                # list_from_str = np.loads(row_d[key])
-
-                # list_from_str = np.lib.npyio.format.read_array(row_d[key])
-                # tmp = re.sub('\s*', '', row_d[key])  # get rid of spaces
-                # a = row_d[key]
-                # b = re.sub('[0-9] ', ', ', a)
-                # c = b.replace('. ', ',').replace('.\n', ',').replace('0.25', '0.25,').replace('0.5', '0.5,').replace(
-                #     '0.75', '0.75,')
-                # d = c.replace('0, ]', '0]').replace('0.25, ]', '0.25]').replace('0.5, ]', '0.5]').replace('0.75, ]', '0.75]').replace('1, ]', '1]')
-
+                # print("fix str to list", type(row_d[key]), row_d[key])
 
                 a = row_d[key]
                 a = a.replace('[', '').replace(']', '')
-
                 a_l = a.split(' ')
                 print("a_l", a_l)
-
                 new_l = []
-                # a_l = a_l.replace('[', '').replace(']', '')
                 for a_i in a_l:
                     if len(a_i) != 0:
                         a_i = a_i.replace('\n', '')
                         a_i = a_i.strip()
-                        print('a_i "', a_i, '"', len(a_i))
+                        # print('a_i "', a_i, '"', len(a_i))
                         if a_i.endswith('.'):
                             a_i = a_i[:-1]
                         a_i = a_i.strip()
                         if len(a_i) != 0:
                             new_l.append(float(a_i))
-
-                print("new_l", new_l)
+                # print("new_l", new_l)
                 # new_list =
                 row_d[key] = new_l
                 # exit()
-
-
-                # tmp = row_d[key].replace('. ', ',').replace('.\n', ',').replace('0.25', '0.25,').replace('0.5', '0.5,').replace('0.75', '0.75,')
-                # # tmp = re.sub('[a-z]*@', 'ApD@', tmp)
-                # tmp = tmp.replace('0, ]', '0]').replace('0.25, ]', '0.25]').replace('0.5, ]', '0.5]').replace('0.75, ]', '0.75]').replace('1, ]', '1]')
-                # tmp = tmp.replace('\n', '').replace('] [', '], [')
-                # print('tmp', tmp)
-                # list_from_str = json.loads(tmp)
-                # row_d[key] = list_from_str
-                # # print("list_from_str", type(list_from_str), list_from_str)
-                # # exit()
-
     return row_d
+
+
+def pretrain_model(q_net, data):
+    batch_size = 100
+    batch = data.sample(batch_size)
+
+    # get the ANN inputs from batch
+    ann_inputs, calculated_rewards = [], []
+    for obs in batch:
+        ann_inputs.append(get_reshaped_ann_input(begin_state=obs[0], new_state=obs[3], action=obs[1]))
+        calculated_rewards.append(obs[2])
+
+    ann_inputs = torch.tensor(ann_inputs).float()
+
+    # holds predictions for the states for each sample and will be used as a default target in the learning
+    predicted_q = q_net(ann_inputs)
+
+    x = np.zeros((batch_size, q_net.input_size))
+    y = np.zeros((batch_size, 1))  # only one output
+
+    for i in range(batch_size):
+        obs = batch[i]
+        s_ = obs[3]
+        GAMMA = 0.95
+        t = predicted_q[i] + GAMMA * get_max_reward_from_state(game, s_, available_actions)  # target
+        x[i] = ann_inputs[i]  # state
+        y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
+
+    """ train the ann https://medium.com/deep-learning-study-notes/multi-layer-perceptron-mlp-in-pytorch-21ea46d50e62 """
+    optimizer = torch.optim.Adam(q_net.parameters())  # Optimizers help the model find the minimum.
+    losses_this_action = []
+    for i in range(batch_size):
+        output = q_net(x[i])
+        true_q_val = torch.tensor(y[i]).float()
+        loss = F.smooth_l1_loss(output, true_q_val)  # L1 loss for regression applications
+        loss.backward()
+
+        optimizer.step()
+
+
+    # save the model
+    now = datetime.datetime.now()
+    torch.save(q_net.state_dict(), 'results/models/pretrained_human_data_' + str(now.day) + '_' + str(now.hour) + '_' + str(now.minute) +  "_epochs.pth")
+
+    pass
 
 
 if __name__ == "__main__":
@@ -100,15 +118,24 @@ if __name__ == "__main__":
             # print(whole_dataset)
             # exit()
 
-    # create new model of DQN
-    q_net = Feedforward(try_cuda=False, input_size=242, hidden_size=21)
-
     # for every row calculate the reward (reward = y)
+    dataset_with_rewards = []
     for row_d in whole_dataset:
         print('row = ', row_d)
-        exit()
+        ann_input = row_d['ann_input']
+        reward = get_reward(state_begin=row_d['state_begin'], piece_to_move=row_d['action'], state_new=row_d['state_new'], pieces_player_begin=row_d['pieces_player_begin'], actual_action=False)
+        row_d['reward'] = reward
+        dataset_with_rewards.append(row_d)
+        # exit()
+    df_with_rewards = pd.DataFrame(dataset_with_rewards)
+    df_with_rewards.to_csv('human_data/df_with_rewards.csv')
 
     # train the neural net
+    # create new model of DQN
+    q_net = Feedforward(try_cuda=False, input_size=242, hidden_size=21)
+    pretrain_model(q_net, data=dataset_with_rewards)
+
+
 
 
 

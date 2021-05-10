@@ -383,7 +383,8 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
-                reward, rewards_counter = get_reward(begin_state, action, new_state, pieces[player_i][player_i], actual_action=True)  # immediate reward
+                pieces_player_begin = pieces[player_i][player_i]
+                reward, rewards_counter = get_reward(begin_state, action, new_state, pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
                 if reward < -0.6:
                     print('ENEMY ENDED THE GAME, reward = ', reward)
                 if reward >= 0.7:

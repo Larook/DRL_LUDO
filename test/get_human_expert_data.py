@@ -97,10 +97,12 @@ def get_expert_data():
                     prGreen("<DICE=%d>please choose an action to take\tavailable_actions(pieces): %s" % (dice, move_pieces))
                     piece_to_move = choose_the_action(move_pieces)
                     new_state = get_state_after_action(g, piece_to_move)
+                    pieces_player_begin = g.get_pieces()[player_i][player_i]
 
                     round_info = {'round': g.round, 'dice': dice, 'begin_state': begin_state,
                                   'action': piece_to_move, 'new_state': new_state,
-                                  'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move)}
+                                  'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move),
+                                  'pieces_player_begin': pieces_player_begin}
                     expert_data_l.append(round_info)
 
                     reward, _ = get_reward(begin_state, piece_to_move, new_state, g.get_pieces()[player_i][player_i],
