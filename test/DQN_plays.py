@@ -93,8 +93,8 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
         # checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
         # checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
-        checkpoint = torch.load('results/models/model_test_219_epochs_all_rewards.pth')
-        epoch_last = 219
+        checkpoint = torch.load('results/models/model_test_99_epochs_batch_600.pth')
+        epoch_last = 99
         q_net.load_state_dict(checkpoint)
     else:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
@@ -126,9 +126,10 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     avg_time_left = 0
     loss_avg = 0
 
-    epochs = 1000
+    epochs = 100
     if not train:
-        epochs = 1000
+        # for evaluation of model just play 100 times
+        epochs = 100
     steps_done = 0
 
     if load_model:
@@ -275,5 +276,9 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 if __name__ == '__main__':
     # unittest.main()
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
-    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
-    # dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
+
+    # training!
+    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+
+    # evaluation
+    dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
