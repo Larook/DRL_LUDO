@@ -265,7 +265,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     # Save history and ANN model
     if not load_model:
         print("saving ann model")
-        torch.save(q_net.state_dict(), 'results/models/model_final.pth')
+        torch.save(q_net.state_dict(), 'results/models/running/old/model_final.pth')
     print("Saving history to numpy file")
     g.save_hist("videos_history/game_history.npy")
     print("Saving game video")
