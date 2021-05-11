@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -35,38 +36,16 @@ class Feedforward(torch.nn.Module):
         return output
 
 
+def get_reshaped_ann_input(begin_state, new_state, action):
+    """ save STATE and ACTION into 1-dimensional np.array. This should be an input to a ANN """
+    # look for the position of the given pawn before and after a move
+    current_player = 0
+    input_ann = np.array(begin_state)
+    input_ann = input_ann.reshape((240, 1))
+
+    action_tuple = (begin_state[current_player][action] / 60, new_state[current_player][action] / 60)
+    # print(input_ann.shape)
+    input_ann = np.append(input_ann, action_tuple)
+    return input_ann
 
 
-
-# class DQN(nn.Module):
-#     """
-#     Our model will be a convolutional neural network that takes in the difference between the current and previous
-#     screen patches. It has two outputs, representing Q(s,left) and Q(s,right) (where s is the input to the network).
-#     In effect, the network is trying to predict the expected return of taking each action given the current input.
-#     """
-#     def __init__(self, h, w, outputs):
-#         super(DQN, self).__init__()
-#         self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-#         self.bn1 = nn.BatchNorm2d(16)
-#         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-#         self.bn2 = nn.BatchNorm2d(32)
-#         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-#         self.bn3 = nn.BatchNorm2d(32)
-#
-#         # Number of linear input connections depends on output of conv2d layers
-#         # and therefore the input image size, so need to compute it
-#         def conv2d_size_out(size, kernel_size = 5, stride = 2):
-#             return (size - (kernel_size - 1) - 1) // stride + 1  # // operator performs division without fraction part
-#
-#         convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
-#         convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
-#         linear_input_size = convw * convh * 32
-#         self.head = nn.Linear(in_features=linear_input_size, out_features=outputs)
-#
-#     # Called with either one element to determine next action or a batch during optimization
-#     # returns tensor([ [ left0exp, right0exp ] ... ])
-#     def forward(self, x):
-#         x = F.relu(self.bn1(self.conv1(x)))
-#         x = F.relu(self.bn2(self.conv2(x)))
-#         x = F.relu(self.bn3(self.conv3(x)))
-#         return self.head(x.view(x.size(0), -1))

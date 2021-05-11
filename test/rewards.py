@@ -117,11 +117,13 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_begin, actua
     # check the end of the game
     if enemies_already_won:
         reward -= 1
-        config.rewards_detected['ai_agent_lost'] += 1
+        if actual_action:
+            config.rewards_detected['ai_agent_lost'] += 1
     elif count_pieces_on_tile(player_no=player_i, state=state_new, tile_no=config.finished_tile) == 4:
         # print("player 0 wins the game in this round")
         reward += 1
-        config.rewards_detected['ai_agent_won'] += 1
+        if actual_action:
+            config.rewards_detected['ai_agent_won'] += 1
 
     """ furthest piece away """
     # check if moved piece is the furthest away
@@ -198,15 +200,17 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_begin, actua
         pieces_globe_new = count_pieces_on_tile(player_i, state_new, globe_tile)
         if pieces_globe_new > pieces_globe_begin:
             reward += 0.12
-            config.rewards_detected['moved_on_safe_globe'] += 1
+            if actual_action:
+                config.rewards_detected['moved_on_safe_globe'] += 1
 
     """ • using a star (speed) 0.17 """
-    for globe_tile in config.star_tiles:
-        pieces_globe_begin = count_pieces_on_tile(player_i, state_begin, globe_tile)
-        pieces_globe_new = count_pieces_on_tile(player_i, state_new, globe_tile)
-        if pieces_globe_new > pieces_globe_begin:
+    for star_tile in config.star_tiles:
+        pieces_star_begin = count_pieces_on_tile(player_i, state_begin, star_tile)
+        pieces_star_new = count_pieces_on_tile(player_i, state_new, star_tile)
+        if pieces_star_new > pieces_star_begin:
             reward += 0.17
-            config.rewards_detected['speed_boost_star'] += 1
+            if actual_action:
+                config.rewards_detected['speed_boost_star'] += 1
 
 
     config.last_turn_state_new = state_new
