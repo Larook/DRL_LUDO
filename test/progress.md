@@ -304,6 +304,14 @@ get_max_reward_from_state(game, s_, available_actions)
     tune the epsilon to settle down after 50 games
 
     
+add -0.1 reward for moving the furthest piece when in safe zone near goal - encourage to go out of home with new pieces!
+How to encourage it instead of adding human-played games?
+
+test the model on bigger number of epochs
+    epoch = 99 | round = 112 <avg_time_left = 3.56 avg_time_epoch = 1.78 | avg_time_turn = 0.01> | won_counter = 28 | steps_done = 36540 
+
+maybe also check training with semi-smart agents   
+    epoch = 199 | round = 93 <avg_time_left = 3.31 avg_time_epoch = 1.65 | avg_time_turn = 0.01> | won_counter = 49 | steps_done = 72400 
 
 
 

@@ -17,7 +17,6 @@ from Memory import *
 from Learning_Info import Learning_Info
 from dqn_action_selection import *
 
-losses = []
 import config
 
 
@@ -68,8 +67,6 @@ def optimize_model(game, batch, target_net, available_actions):
 
         optimizer.step()
 
-        global losses
-        losses.append({'loss': loss.item()})
         losses_this_action.append(loss.item())
         # print("loss.item() = ", loss.item())
     loss_avg = np.mean(losses_this_action)
@@ -129,7 +126,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     epochs = 100
     if not train:
         # for evaluation of model just play 100 times
-        epochs = 100
+        epochs = 200
     steps_done = 0
 
     if load_model:
@@ -168,7 +165,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                 # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
 
                 t_action_selection = time.time()
-                action, new_state = action_selection(g, move_pieces, q_net, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=load_model)
+                action, new_state = action_selection(g, move_pieces, q_net, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=not(train))
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
@@ -238,7 +235,10 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         avg_time_epoch = np.mean(time_epochs)
 
         # save results after each epoch
-        learning_info_data.save_to_csv('results/learning_info_data_process.csv', epoch_no=epoch)
+        csv_name = 'results/learning_info_data_process'
+        if not train:
+            csv_name += '_evaluate_model'
+        learning_info_data.save_to_csv(csv_name + '.csv', epoch_no=epoch)
         learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
         if epoch % 3 == 0 and train:
@@ -258,13 +258,11 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         # reset rewards detected after epoch
         rewards_detected_reset()
 
-    df_losses = pd.DataFrame.from_records(losses)
-    df_losses.to_csv('results/losses.csv')
     learning_info_data.save_to_csv('results/learning_info_data_x.csv', epoch_no=epoch)
-    learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch)
+    learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
     # Save history and ANN model
-    if not load_model:
+    if train:
         print("saving ann model")
         torch.save(q_net.state_dict(), 'results/models/running/old/model_final.pth')
     print("Saving history to numpy file")
