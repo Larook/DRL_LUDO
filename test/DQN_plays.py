@@ -108,7 +108,8 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     network_sync_freq = 100
     network_sync_counter = 0
 
-    BATCH_SIZE = 600  # 1000
+    # BATCH_SIZE = 600  # first try
+    BATCH_SIZE = 1200  # second try overnight
     if do_random_walk:
         BATCH_SIZE = 10000  # 1000
 
@@ -264,7 +265,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     # Save history and ANN model
     if train:
         print("saving ann model")
-        torch.save(q_net.state_dict(), 'results/models/running/old/model_final.pth')
+        torch.save(q_net.state_dict(), 'results/models/running/model_final.pth')
     print("Saving history to numpy file")
     g.save_hist("videos_history/game_history.npy")
     print("Saving game video")
@@ -276,7 +277,7 @@ if __name__ == '__main__':
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # training!
-    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # evaluation
-    dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
