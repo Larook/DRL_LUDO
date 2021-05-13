@@ -287,8 +287,11 @@ if __name__ == '__main__':
     # unittest.main()
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
-    # training!
-    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    # training from scratch
+    dqn_approach(do_random_walk=False, load_model=False, train=True, use_pretrained=False, use_gpu=False)
+
+    # training from pretrained
+    dqn_approach(do_random_walk=False, load_model=True, train=True, use_pretrained=True, use_gpu=False)
 
     # evaluation
-    # dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=False, use_pretrained=True, use_gpu=False)
