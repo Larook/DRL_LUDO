@@ -1,21 +1,24 @@
 import config
 from collections import namedtuple
 
+from dqn_action_selection import get_state_after_action
+
 
 def count_pieces_on_tile(player_no, state, tile_no):
     value = state[player_no][tile_no]
     return value * 4
 
 
-def get_max_reward_from_state(game, state, possible_actions):
+def get_max_reward_from_state(pieces_player_begin, dice, state, possible_actions):
     """ need to check all the movable pieces, and calculate all the possible rewards and get the maximum one"""
-    from DQN_plays import get_state_after_action
+    from DQN_plays import get_state_after_action_g
 
     max_reward = 0
     for action in possible_actions:
 
         # get next state
-        new_state = get_state_after_action(game, action)
+        # new_state = get_state_after_action_g(game, action)  # todo: rewrite to not using game
+        new_state = get_state_after_action(pieces_player_begin, state, dice, action)
 
         # get reward
         reward, _ = get_reward(state, action, new_state, pieces_player_begin=game.get_pieces()[game.current_player][game.current_player])

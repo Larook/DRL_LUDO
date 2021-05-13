@@ -7,14 +7,16 @@ from Feedforward import *
 import config
 
 
-def take_best_action(game, move_pieces, begin_state, q_net):
+def take_best_action(pieces_player_begin, dice, move_pieces, begin_state, q_net):
     action_q_l = []
     best_Q_val = -9999999999
 
     for possible_action in move_pieces:
         # get piece with best Q
         before_new_state_t = time.time()
-        new_state = get_state_after_action(game, possible_action)
+        # new_state = get_state_after_action_g(game, possible_action)
+        new_state = get_state_after_action(pieces_player_begin=pieces_player_begin, state_begin=begin_state, dice=dice, action=possible_action)
+
         # print("<timing> get_state_after_action =", time.time() - before_new_state_t)
 
         input_ann = get_reshaped_ann_input(begin_state, new_state, possible_action)
@@ -32,18 +34,20 @@ def take_best_action(game, move_pieces, begin_state, q_net):
     return piece_to_move
 
 
-def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_random=False, show=False,
+
+def action_selection(pieces_player_begin, dice, move_pieces, q_net, state_begin, steps_done, is_random=False, show=False,
                      exploit_model=False):
     """
     Use MLP to get the Q_value of chosen action and state
     choose the best action and return the new_state
     :param move_pieces:
     :param q_net:
-    :param begin_state:
+    :param state_begin:
     :param steps_done:
     :return:
     """
     """ !!! check help/tweak_epsilon.py """
+
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 10000  # after 10 games eps_threshold=0.053
@@ -61,7 +65,7 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
         if sample > eps_threshold or exploit_model:
             # choose best pawn
             if not is_random:
-                piece_to_move = take_best_action(game=game, move_pieces=move_pieces, begin_state=begin_state, q_net=q_net)
+                piece_to_move = take_best_action(pieces_player_begin=pieces_player_begin, dice=dice, move_pieces=move_pieces, begin_state=state_begin, q_net=q_net)
                 if show:
                     print("\tbest action selected")
             else:
@@ -72,18 +76,110 @@ def action_selection(game, move_pieces, q_net, begin_state, steps_done, is_rando
             piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
             if show:
                 print("\trandom action selected")
-        new_state = get_state_after_action(game, piece_to_move)
+        # new_state = get_state_after_action_g(game, piece_to_move)
+        new_state = get_state_after_action(pieces_player_begin=pieces_player_begin, state_begin=state_begin, dice=dice, action=piece_to_move)
 
     else:
         piece_to_move = -1
-        new_state = get_state_after_action(game, piece_to_move)
+        # new_state = get_state_after_action_g(game, piece_to_move)
+        new_state = get_state_after_action(pieces_player_begin=pieces_player_begin, state_begin=state_begin, dice=dice, action=piece_to_move)
+
         if show:
             print("\tthe only possible action selected")
 
     return piece_to_move, new_state
 
 
-def get_state_after_action(game, pawn):
+
+def action_selection_g(game, move_pieces, q_net, begin_state, steps_done, is_random=False, show=False,
+                       exploit_model=False):
+    """
+    Use MLP to get the Q_value of chosen action and state
+    choose the best action and return the new_state
+    :param move_pieces:
+    :param q_net:
+    :param begin_state:
+    :param steps_done:
+    :return:
+    """
+    """ !!! check help/tweak_epsilon.py """
+
+    pieces_on_board = game.get_pieces()[0]
+    pieces_player_begin = pieces_on_board[0]
+    dice = game.current_dice
+
+
+    EPS_START = 0.9
+    EPS_END = 0.05
+    EPS_DECAY = 10000  # after 10 games eps_threshold=0.053
+
+    if len(move_pieces):
+        # epsilon greedy
+        sample = random.random()
+        # eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY)
+        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.7 * steps_done / EPS_DECAY)
+
+        config.epsilon_now = eps_threshold
+        # print("eps_threshold = ", eps_threshold)
+        steps_done += 1
+
+        if sample > eps_threshold or exploit_model:
+            # choose best pawn
+            if not is_random:
+                piece_to_move = take_best_action(pieces_player_begin=pieces_player_begin, dice=dice, move_pieces=move_pieces, begin_state=begin_state, q_net=q_net)
+                if show:
+                    print("\tbest action selected")
+            else:
+                piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
+
+        else:
+            # get random pawn
+            piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
+            if show:
+                print("\trandom action selected")
+        # new_state = get_state_after_action_g(game, piece_to_move)
+        new_state = get_state_after_action(pieces_player_begin=pieces_player_begin, state_begin=begin_state, dice=dice, action=piece_to_move)
+
+    else:
+        piece_to_move = -1
+        # new_state = get_state_after_action_g(game, piece_to_move)
+        new_state = get_state_after_action(pieces_player_begin=pieces_player_begin, state_begin=begin_state, dice=dice, action=piece_to_move)
+
+        if show:
+            print("\tthe only possible action selected")
+
+    return piece_to_move, new_state
+
+
+
+def get_state_after_action(pieces_player_begin, state_begin, dice, action):
+    """
+    knowing where are current player's pieces and whats the dice and action to take
+    :return: state of the player after making the move
+    """
+    # print("pieces_player_begin", pieces_player_begin)
+    tile_move_from = pieces_player_begin[action]
+
+    state_new = state_begin.copy()
+    # print("state_new", state_new)
+
+    for tile_id, value in enumerate(state_begin[0]):
+        if tile_id == tile_move_from:
+            # remove piece from this tile
+            state_new[0][tile_id] -= 0.25
+            # put the piece on the wanted tile
+            tile_move_to = tile_move_from + dice
+            # print("tile_move_to = ", tile_move_to)
+            if tile_move_to < config.finished_tile:
+                state_new[0][tile_move_to] += 0.25
+            else:
+                # if in the safe zone and dice overshoot, take steps back
+                tile_difference = tile_move_to - config.finished_tile
+                state_new[0][config.finished_tile - tile_difference] += 0.25
+            return state_new
+
+
+def get_state_after_action_g(game, pawn):
     """
     based on game.answer_observation()
     to feed the ANN we need state before and after action

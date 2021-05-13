@@ -315,3 +315,16 @@ maybe also check training with semi-smart agents
 
 
 
+testing the 1200 batch size model:
+    epoch = 199 | round = 78 <avg_time_left = 3.31 avg_time_epoch = 1.66 | avg_time_turn = 0.01> | won_counter = 51 | steps_done = 73090 |
+
+Still hasnt learnt anything - need to try to pretrain the network!
+
+
+sampling list of dict!  -      batch = data.sample(batch_size)
+get_max_reward_from_state
+
+save more to csv:
+get_max_reward_from_state(pieces_player_begin, dice, state, possible_actions)
+    pieces_player_begin
+    possible_actions

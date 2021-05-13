@@ -79,8 +79,11 @@ def pretrain_model(q_net, data):
     for i in range(batch_size):
         obs = batch[i]
         s_ = obs[3]
-        GAMMA = 0.95
-        t = predicted_q[i] + GAMMA * get_max_reward_from_state(game, s_, available_actions)  # target
+        dice = obs[?]
+        pieces_player_begin = obs[?]
+        possible_actions = obs[?]
+
+        t = predicted_q[i] + config.GAMMA * get_max_reward_from_state(pieces_player_begin=pieces_player_begin, dice=dice, state=s_, possible_actions=possible_actions)  # target
         x[i] = ann_inputs[i]  # state
         y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
@@ -99,7 +102,6 @@ def pretrain_model(q_net, data):
     # save the model
     now = datetime.datetime.now()
     torch.save(q_net.state_dict(), 'results/models/pretrained_human_data_' + str(now.day) + '_' + str(now.hour) + '_' + str(now.minute) +  "_epochs.pth")
-
     pass
 
 
@@ -123,6 +125,7 @@ if __name__ == "__main__":
     for row_d in whole_dataset:
         print('row = ', row_d)
         ann_input = row_d['ann_input']
+        # reward = get_reward(state_begin=row_d['begin_state'], piece_to_move=row_d['action'], state_new=row_d['new_state'], pieces_player_begin=row_d['pieces_player_begin'], actual_action=False)
         reward = get_reward(state_begin=row_d['state_begin'], piece_to_move=row_d['action'], state_new=row_d['state_new'], pieces_player_begin=row_d['pieces_player_begin'], actual_action=False)
         row_d['reward'] = reward
         dataset_with_rewards.append(row_d)
@@ -133,7 +136,7 @@ if __name__ == "__main__":
     # train the neural net
     # create new model of DQN
     q_net = Feedforward(try_cuda=False, input_size=242, hidden_size=21)
-    pretrain_model(q_net, data=dataset_with_rewards)
+    q_net_trained = pretrain_model(q_net, data=dataset_with_rewards)
 
 
 

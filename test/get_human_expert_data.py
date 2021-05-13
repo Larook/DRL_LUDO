@@ -6,7 +6,7 @@ import pandas as pd
 
 from ludopy import make_img_of_board
 from ludopy.visualizer import draw_basic_board
-from DQN_plays import get_game_state, get_state_after_action, get_reshaped_ann_input
+from DQN_plays import get_game_state, get_state_after_action_g, get_reshaped_ann_input
 from rewards import get_reward
 import config
 
@@ -96,11 +96,11 @@ def get_expert_data():
                     play(music)
                     prGreen("<DICE=%d>please choose an action to take\tavailable_actions(pieces): %s" % (dice, move_pieces))
                     piece_to_move = choose_the_action(move_pieces)
-                    new_state = get_state_after_action(g, piece_to_move)
+                    new_state = get_state_after_action_g(g, piece_to_move)
                     pieces_player_begin = g.get_pieces()[player_i][player_i]
 
-                    round_info = {'round': g.round, 'dice': dice, 'begin_state': begin_state,
-                                  'action': piece_to_move, 'new_state': new_state,
+                    round_info = {'round': g.round, 'dice': dice, 'state_begin': begin_state,
+                                  'action': piece_to_move, 'state_new': new_state,
                                   'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move),
                                   'pieces_player_begin': pieces_player_begin}
                     expert_data_l.append(round_info)

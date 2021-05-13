@@ -35,7 +35,8 @@ def get_pawn_id_from_tile(tile_id, player_pieces):
 # TODO train the network using the memory
 def optimize_model(game, batch, target_net, available_actions):
     batchLen = len(batch)
-
+    pieces_player_begin
+    dice = game.current_dice
     # get the ANN inputs from batch
     ann_inputs, calculated_rewards = [], []
     for obs in batch:
@@ -52,7 +53,7 @@ def optimize_model(game, batch, target_net, available_actions):
         obs = batch[i]
         s_ = obs[3]
         GAMMA = 0.95
-        t = predicted_q[i] + GAMMA * get_max_reward_from_state(game, s_, available_actions)  # target
+        t = predicted_q[i] + GAMMA * get_max_reward_from_state(pieces_player_begin, dice, s_, available_actions)  # target
         x[i] = ann_inputs[i]  # state
         y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
@@ -90,7 +91,8 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
 
         # checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
         # checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
-        checkpoint = torch.load('results/models/model_test_99_epochs_batch_600.pth')
+        # checkpoint = torch.load('results/models/model_test_99_epochs_batch_600.pth')
+        checkpoint = torch.load('results/models/model_final_epochs100_batch1200.pth')
         epoch_last = 99
         q_net.load_state_dict(checkpoint)
     else:
@@ -148,30 +150,39 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
             time_turn_start = time.time()
 
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
-            pieces = g.get_pieces()
 
             if player_i not in ai_agents:
                 if len(move_pieces) > 0:
                     action = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
                 else:
                     action = -1
-                new_state = get_state_after_action(g, action)
+                new_state = get_state_after_action_g(g, action)
             else:
                 """ select an action of AI player """
+                # pieces = g.get_pieces()
+                pieces_on_board = g.get_pieces()[player_i]
+                # print("pieces_on_board", pieces_on_board)
+                pieces_player_begin = pieces_on_board[player_i]
+                # print("pieces_player_begin", pieces_player_begin)
 
                 t_get_game_state = time.time()
-                begin_state = get_game_state(pieces[player_i])
+                state_begin = get_game_state(pieces_on_board)
                 if steps_done == 0:
-                    config.last_turn_state_new = begin_state
+                    config.last_turn_state_new = state_begin
                 # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
 
                 t_action_selection = time.time()
-                action, new_state = action_selection(g, move_pieces, q_net, begin_state, steps_done, is_random=do_random_walk, show=False, exploit_model=not(train))
+                # action, new_state = action_selection_g(g, move_pieces, q_net, state_begin, steps_done,
+                #                                        is_random=do_random_walk, show=False, exploit_model=not (train))
+
+                action, new_state = action_selection(pieces_player_begin=pieces_player_begin, dice=dice,
+                                                     move_pieces=move_pieces, q_net=q_net, state_begin=state_begin,
+                                                     steps_done=steps_done, is_random=False, show=False,
+                       exploit_model=not(train))
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
-                pieces_player_begin = pieces[player_i][player_i]
-                reward, rewards_counter = get_reward(begin_state, action, new_state, pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
+                reward, rewards_counter = get_reward(state_begin, action, new_state, pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
                 if reward < -0.6:
                     print('ENEMY ENDED THE GAME, reward = ', reward)
                 if reward >= 0.7:
@@ -179,7 +190,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                 # print("<timing> t_get_reward =", time.time()-t_get_reward)
 
                 # save round observation to the memory
-                memory.add((begin_state, action, reward, new_state))
+                memory.add((state_begin, action, reward, new_state))
 
                 """ perform one step of optimization with random batch from memory == TRAIN network """
                 # if not use_model:
@@ -219,7 +230,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
             if player_i in ai_agents:
                 avg_reward = np.array(rewards_info).mean()
                 learning_info_data.update(epoch_no=epoch, epochs_won=won_counter, ai_player_i=player_i,
-                                          action_no=steps_done, begin_state=begin_state, dice_now=dice, action=action,
+                                          action_no=steps_done, begin_state=state_begin, dice_now=dice, action=action,
                                           new_state=new_state, reward=reward, avg_reward=avg_reward, loss=loss_avg,
                                           rewards_info=rewards_counter, epsilon_now=config.epsilon_now)
 
@@ -246,7 +257,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
             print("saving ann model")
             torch.save(q_net.state_dict(), 'results/models/running/model_test_'+str(epoch)+"_epochs.pth")
 
-        if won_counter % 2 == 0 and won_counter > 0:
+        if (won_counter % 10 == 0 and won_counter > 0 and not train) or (won_counter % 2 == 0 and won_counter > 0 and train):
             g.save_hist("results/videos_history/game_history.npy")
             g.save_hist_video("results/videos_history/game_ANN_last_win_3_won.mp4")
 
@@ -277,7 +288,7 @@ if __name__ == '__main__':
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # training!
-    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # evaluation
-    # dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
