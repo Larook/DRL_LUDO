@@ -33,10 +33,10 @@ def get_pawn_id_from_tile(tile_id, player_pieces):
 
 
 # TODO train the network using the memory
-def optimize_model(game, batch, target_net, available_actions):
+def optimize_model(dice, pieces_player_begin, batch, target_net, available_actions):
     batchLen = len(batch)
-    pieces_player_begin
-    dice = game.current_dice
+    # pieces_player_begin
+    # dice = game.current_dice
     # get the ANN inputs from batch
     ann_inputs, calculated_rewards = [], []
     for obs in batch:
@@ -208,7 +208,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
                             network_sync_counter = 0
 
                         t_optimize_model = time.time()
-                        loss_avg = optimize_model(game=g, batch=batch, target_net=target_net, available_actions=move_pieces)
+                        loss_avg = optimize_model(dice=dice, pieces_player_begin=pieces_player_begin, batch=batch, target_net=target_net, available_actions=move_pieces)
                         network_sync_counter += 1
                 # print("<timing> t_optimize_model =", time.time()-t_optimize_model)
                 rewards_info.append(reward)
@@ -278,9 +278,9 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
         print("saving ann model")
         torch.save(q_net.state_dict(), 'results/models/running/model_final.pth')
     print("Saving history to numpy file")
-    g.save_hist("videos_history/game_history.npy")
+    g.save_hist("results/videos_history/game_history.npy")
     print("Saving game video")
-    g.save_hist_video("videos_history/game_ANN_test.mp4")
+    g.save_hist_video("results/videos_history/game_ANN_test.mp4")
 
 
 if __name__ == '__main__':
@@ -288,7 +288,7 @@ if __name__ == '__main__':
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # training!
-    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # evaluation
-    dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=False, use_gpu=False)

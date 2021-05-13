@@ -99,11 +99,20 @@ def get_expert_data():
                     new_state = get_state_after_action_g(g, piece_to_move)
                     pieces_player_begin = g.get_pieces()[player_i][player_i]
 
-                    round_info = {'round': g.round, 'dice': dice, 'state_begin': begin_state,
-                                  'action': piece_to_move, 'state_new': new_state,
+                    round_info = {'round': g.round,
+                                  'dice': dice,
+                                  'pieces_player_begin': pieces_player_begin,
+                                  'available_actions': move_pieces,
+                                  'state_begin': begin_state,
+                                  'action': piece_to_move,
+                                  'state_new': new_state,
                                   'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move),
-                                  'pieces_player_begin': pieces_player_begin}
+                                  }
                     expert_data_l.append(round_info)
+                    """ have to run this function:  
+                    loss_avg = optimize_model(dice=dice, pieces_player_begin=pieces_player_begin, batch=batch,
+                                              target_net=target_net, available_actions=move_pieces)
+                    """
 
                     reward, _ = get_reward(begin_state, piece_to_move, new_state, g.get_pieces()[player_i][player_i],
                                                          actual_action=True)  # immediate reward

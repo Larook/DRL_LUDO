@@ -21,7 +21,7 @@ def get_max_reward_from_state(pieces_player_begin, dice, state, possible_actions
         new_state = get_state_after_action(pieces_player_begin, state, dice, action)
 
         # get reward
-        reward, _ = get_reward(state, action, new_state, pieces_player_begin=game.get_pieces()[game.current_player][game.current_player])
+        reward, _ = get_reward(state, action, new_state, pieces_player_begin=pieces_player_begin)
         # reward = get_reward(state, action, new_state)
         if reward >= max_reward:
             max_reward = reward
@@ -134,7 +134,7 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_begin, actua
     # print("pieces_player_now", pieces_player_now)
     for piece in range(len(pieces_player_begin)):
         # print("pieces_player_now[piece]", pieces_player_now[piece])
-        if pieces_player_begin[piece] >= furthest_dist:
+        if pieces_player_begin[piece] >= furthest_dist and pieces_player_begin[piece] not in config.safe_corridor:
             furthest_dist = pieces_player_begin[piece]
             furthest_piece = piece
     # print("furthest_piece ", furthest_piece)
@@ -149,9 +149,10 @@ def get_reward(state_begin, piece_to_move, state_new, pieces_player_begin, actua
             if actual_action:
                 config.rewards_detected['move_closest_safe'] += 1
         else:
-            reward += 0.1
-            if actual_action:
-                config.rewards_detected['move_closest_goal'] += 1
+            if not furthest_dist in config.safe_corridor:
+                reward += 0.1
+                if actual_action:
+                    config.rewards_detected['move_closest_goal'] += 1
         # exit('chosen furthest one')
 
     """ 

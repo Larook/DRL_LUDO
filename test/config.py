@@ -28,7 +28,7 @@ rewards_detected = init_rewards_couter_dict()
 home_tile = 0
 finished_tile = 59
 
-safe_corridor = [54, 55, 56, 57, 58]
+safe_corridor = [54, 55, 56, 57, 58, 59]
 
 globe_tiles = [9, 14, 22, 35, 48]
 star_tiles = [5, 12, 18, 25, 31, 38, 44, 51]
