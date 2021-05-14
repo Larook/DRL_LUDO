@@ -332,4 +332,8 @@ get_max_reward_from_state(pieces_player_begin, dice, state, possible_actions)
     possible_actions
 
 
-rewards - when the furthest away is in the safe zone - dont add +0.1 reward!!!
+    rewards - when the furthest away is in the safe zone - dont add +0.1 reward!!!
+
+check if shuffling of the memory works!
+record more games
+Piece release might be wrong!!!

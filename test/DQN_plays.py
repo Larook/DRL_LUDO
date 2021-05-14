@@ -78,7 +78,7 @@ def rewards_detected_reset():
     config.rewards_detected = config.init_rewards_couter_dict()
 
 
-def dqn_approach(do_random_walk, load_model, train, use_gpu):
+def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
 
     ai_agents = [0]  # which id of player should be played by ai?
     g = ludopy.Game()
@@ -89,11 +89,17 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     if load_model:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
 
-        # checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
-        # checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
-        # checkpoint = torch.load('results/models/model_test_99_epochs_batch_600.pth')
-        checkpoint = torch.load('results/models/model_final_epochs100_batch1200.pth')
-        epoch_last = 99
+        if not use_pretrained:
+            # checkpoint = torch.load('results/models/model_test_48_epochs_2nets.pth')
+            # checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
+            # checkpoint = torch.load('results/models/model_test_99_epochs_batch_600.pth')
+            checkpoint = torch.load('results/models/model_final_epochs100_batch1200.pth')
+            epoch_last = 99
+
+        if use_pretrained:
+            checkpoint = torch.load('results/models/pretrained_human_data_13_21_26_epochs.pth')
+            epoch_last = 1
+
         q_net.load_state_dict(checkpoint)
     else:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
@@ -126,7 +132,7 @@ def dqn_approach(do_random_walk, load_model, train, use_gpu):
     avg_time_left = 0
     loss_avg = 0
 
-    epochs = 100
+    epochs = 1000
     if not train:
         # for evaluation of model just play 100 times
         epochs = 200
@@ -288,7 +294,7 @@ if __name__ == '__main__':
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # training from scratch
-    dqn_approach(do_random_walk=False, load_model=False, train=True, use_pretrained=False, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=False, train=True, use_pretrained=False, use_gpu=False)
 
     # training from pretrained
     dqn_approach(do_random_walk=False, load_model=True, train=True, use_pretrained=True, use_gpu=False)
