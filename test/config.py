@@ -1,3 +1,6 @@
+from Learning_Info import Learning_Info
+
+
 def init_rewards_couter_dict():
     return {'piece_release': 0, 'defend_vulnerable': 0, 'knock_opponent': 0,
                     'move_closest_goal': 0, 'move_closest_safe': 0, 'forming_blockade': 0,
@@ -7,8 +10,8 @@ def init_rewards_couter_dict():
                     'ai_agent_won': 0, 'ai_agent_lost': 0,
             }
 
-
-last_turn_state_new = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+def init_start_state():
+    start_state = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -20,6 +23,12 @@ last_turn_state_new = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,]]
+    return start_state
+
+
+learning_info_data = Learning_Info()
+
+last_turn_state_new = init_start_state()
 
 epsilon_now = 0
 rewards_detected = init_rewards_couter_dict()

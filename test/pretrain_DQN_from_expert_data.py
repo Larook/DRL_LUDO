@@ -115,7 +115,7 @@ def pretrain_model(q_net, data):
         pieces_player_begin = obs['pieces_player_begin']
         possible_actions = obs['available_actions']
 
-        t = predicted_q[i] + config.GAMMA * get_max_reward_from_state(pieces_player_begin=pieces_player_begin, dice=dice, state=s_, possible_actions=possible_actions)  # target
+        t = predicted_q[i] + config.GAMMA * get_max_reward_from_state(pieces_player_begin=pieces_player_begin, dice=dice, state_begin=s_, possible_actions=possible_actions)  # target
         x[i] = ann_inputs[i]  # state
         y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
         print('row = ', row_d)
         ann_input = row_d['ann_input']
         # reward = get_reward(state_begin=row_d['begin_state'], piece_to_move=row_d['action'], state_new=row_d['new_state'], pieces_player_begin=row_d['pieces_player_begin'], actual_action=False)
-        reward = get_reward(state_begin=row_d['state_begin'], piece_to_move=row_d['action'], state_new=row_d['state_new'], pieces_player_begin=row_d['pieces_player_begin'], actual_action=False)
+        reward = get_reward(dice=row_d['dice'], state_begin=row_d['state_begin'], piece_to_move=row_d['action'], state_new=row_d['state_new'], pieces_player_begin=row_d['pieces_player_begin'], actual_action=False)
         row_d['reward'] = reward
         dataset_with_rewards.append(row_d)
         # exit()

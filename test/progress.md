@@ -337,3 +337,5 @@ get_max_reward_from_state(pieces_player_begin, dice, state, possible_actions)
 check if shuffling of the memory works!
 record more games
 Piece release might be wrong!!!
+
+fix rewards problem!!! Loosing pieces - doesnt work 100% but cant find where is the error

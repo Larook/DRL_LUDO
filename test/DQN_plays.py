@@ -122,7 +122,6 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
         BATCH_SIZE = 10000  # 1000
 
     memory = Memory(BATCH_SIZE)
-    learning_info_data = Learning_Info()
 
     # counter info
     won_counter = 0
@@ -150,6 +149,7 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
 
         """ main game loop """
         ai_player_seen_end = False
+        config.last_turn_state_new = config.init_start_state()
         reward = 0
 
         while not ai_player_seen_end:
@@ -162,7 +162,7 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
                     action = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
                 else:
                     action = -1
-                new_state = get_state_after_action_g(g, action)
+                state_new = get_state_after_action_g(g, action)
             else:
                 """ select an action of AI player """
                 # pieces = g.get_pieces()
@@ -178,17 +178,17 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
                 # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
 
                 t_action_selection = time.time()
-                # action, new_state = action_selection_g(g, move_pieces, q_net, state_begin, steps_done,
+                # action, state_new = action_selection_g(g, move_pieces, q_net, state_begin, steps_done,
                 #                                        is_random=do_random_walk, show=False, exploit_model=not (train))
 
-                action, new_state = action_selection(pieces_player_begin=pieces_player_begin, dice=dice,
+                action, state_new = action_selection(pieces_player_begin=pieces_player_begin, dice=dice,
                                                      move_pieces=move_pieces, q_net=q_net, state_begin=state_begin,
                                                      steps_done=steps_done, is_random=False, show=False,
                        exploit_model=not(train))
                 # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
                 t_get_reward = time.time()
-                reward, rewards_counter = get_reward(state_begin, action, new_state, pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
+                reward = get_reward(dice=dice, state_begin=state_begin, piece_to_move=action, state_new=state_new, pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
                 if reward < -0.6:
                     print('ENEMY ENDED THE GAME, reward = ', reward)
                 if reward >= 0.7:
@@ -196,7 +196,7 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
                 # print("<timing> t_get_reward =", time.time()-t_get_reward)
 
                 # save round observation to the memory
-                memory.add((state_begin, action, reward, new_state))
+                memory.add((state_begin, action, reward, state_new))
 
                 """ perform one step of optimization with random batch from memory == TRAIN network """
                 # if not use_model:
@@ -220,30 +220,36 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
                 rewards_info.append(reward)
 
                 if player_i in ai_agents:
-                    if any(count_pieces_on_tile(player_no=player_id, state=new_state, tile_no=59) == 4 for player_id in range(0,4)):
+                    # if any(count_pieces_on_tile(player_no=player_id, state=state_new, tile_no=59) == 4 for player_id in range(0,4)):
+                    if config.rewards_detected['ai_agent_lost'] > 0:
+                        # if any(state_new[player_i][config.finished_tile] == 1 for player_id in range(0,4)):
                         ai_player_seen_end = True
+                        print("ai_player_seen_end and lost!")
 
             """ perform action and end round """
             _, _, _, _, player_is_a_winner, there_is_a_winner = g.answer_observation(action)
-            if reward >= 1:
+            if config.rewards_detected['ai_agent_won'] >0 :
                 if player_i in ai_agents:
                     won_counter += 1
                     print("<!!!> player_ai won!! won_counter=", won_counter)
+                    ai_player_seen_end = True
                     # if do_random_walk:
                     #     exit("works! trying to reduce time of get_state_after_action()")
+
 
             steps_done += 1
             if player_i in ai_agents:
                 avg_reward = np.array(rewards_info).mean()
-                learning_info_data.update(epoch_no=epoch, epochs_won=won_counter, ai_player_i=player_i,
+                config.learning_info_data.update(epoch_no=epoch, round_no=g.round, epochs_won=won_counter, ai_player_i=player_i,
                                           action_no=steps_done, begin_state=state_begin, dice_now=dice, action=action,
-                                          new_state=new_state, reward=reward, avg_reward=avg_reward, loss=loss_avg,
-                                          rewards_info=rewards_counter, epsilon_now=config.epsilon_now)
+                                          new_state=state_new, reward=reward, avg_reward=avg_reward, loss=loss_avg,
+                                          rewards_info=config.rewards_detected, epsilon_now=config.epsilon_now)
 
             time_turn_end = time.time()
             time_turns.append(time_turn_end - time_turn_start)
             avg_time_turn = np.mean(time_turns)
-            if steps_done % 10 == 0:
+            # if steps_done % 10 == 0:
+            if player_i == 0:
                 print("epoch = %d | round = %d <avg_time_left = %.2f avg_time_epoch = %.2f | avg_time_turn = %.2f> "
                       "| won_counter = %d | steps_done = %d | action = %d | avg_reward = %f, loss_avg = %f "
                       "| epsilon = %f" % (epoch, g.round, avg_time_left, avg_time_epoch, avg_time_turn, won_counter,
@@ -256,8 +262,8 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
         csv_name = 'results/learning_info_data_process'
         if not train:
             csv_name += '_evaluate_model'
-        learning_info_data.save_to_csv(csv_name + '.csv', epoch_no=epoch)
-        learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
+        config.learning_info_data.save_to_csv(csv_name + '.csv', epoch_no=epoch)
+        config.learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
         if epoch % 3 == 0 and train:
             print("saving ann model")
@@ -276,8 +282,8 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
         # reset rewards detected after epoch
         rewards_detected_reset()
 
-    learning_info_data.save_to_csv('results/learning_info_data_x.csv', epoch_no=epoch)
-    learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
+    config.learning_info_data.save_to_csv('results/learning_info_data_x.csv', epoch_no=epoch)
+    config.learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
     # Save history and ANN model
     if train:

@@ -10,14 +10,14 @@ class Learning_Info():
         self.whole_list = []
         self.rewards_each_epoch = []
 
-    def update(self, epoch_no, epochs_won, action_no, ai_player_i, begin_state, dice_now, action, new_state,
+    def update(self, epoch_no, round_no, epochs_won, action_no, ai_player_i, begin_state, dice_now, action, new_state,
                reward, avg_reward, loss, rewards_info, epsilon_now):
         avg_reward_this_epoch = 0
         self.rewards_each_epoch.append(reward)
         winrate = epochs_won/epoch_no
 
-
-        self.whole_list.append({'epoch_no': epoch_no, 'epochs_won': epochs_won, 'winrate': winrate, 'action_no': action_no,
+        self.whole_list.append({'epoch_no': epoch_no, 'round': round_no, 'epochs_won': epochs_won, 'winrate': winrate,
+                                'action_no': action_no,
                                 'ai_player_i': ai_player_i, 'begin_state': begin_state, 'dice_now': dice_now,
                                 'action': action, 'new_state': new_state, 'reward': reward, 'avg_reward': avg_reward,
                                 'avg_reward_this_epoch': np.array(self.rewards_each_epoch).mean(),

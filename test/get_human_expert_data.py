@@ -114,7 +114,7 @@ def get_expert_data():
                                               target_net=target_net, available_actions=move_pieces)
                     """
 
-                    reward, _ = get_reward(begin_state, piece_to_move, new_state, g.get_pieces()[player_i][player_i],
+                    reward = get_reward(dice, begin_state, piece_to_move, new_state, g.get_pieces()[player_i][player_i],
                                                          actual_action=True)  # immediate reward
                     print("piece_to_move = %d | reward = %f " % (piece_to_move, reward))
 
