@@ -98,7 +98,8 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
 
         if use_pretrained:
             # checkpoint = torch.load('results/models/pretrained_human_data_13_21_26_epochs.pth')
-            checkpoint = torch.load('results/models/pretrained_human_data_16_13_25_epochs.pth')
+            # checkpoint = torch.load('results/models/pretrained_human_data_16_13_25_epochs.pth')
+            checkpoint = torch.load('results/models/pretrained_human_data_17_22_44_epochs.pth')
             epoch_last = 1
 
         q_net.load_state_dict(checkpoint)

@@ -44,44 +44,14 @@ def get_fixed_row_from_str(row_d):
                     row_d[key] = int(row_d[key])
 
                 else:
-                    print("fix str to list", type(row_d[key]), row_d[key])
+                    # print("fix str to list", type(row_d[key]), row_d[key])
                     a = row_d[key]
-                    print("a", a)
-                    # a = a.replace('[', '').replace(']', '')
-                    # a_l = a.split(' ')
+                    # print("a", a)
                     a = a.replace(' ', ',').replace('[ ','[').replace('[,','[').replace('\n','').replace('.]', ']').replace(',,',',').replace('.,',',').replace(',,',',').replace(',,,',',').replace(',]',']').replace(',,',',').replace(',]',']')
-                    print("key = ", key, "a", a)
-
+                    # print("key = ", key, "a", a)
                     a_l = json.loads(a)
-
-                    print("type(a_l) = %s a_l = %s" % (type(a_l), a_l))
-                    # new_l = []
-                    # for a_i in a_l:
-                    #     print("a_i = ", a_i)
-                    #
-                    #     if type(a_i) != str:
-                    #         new_l.append(float(a_i))
-                    #         # pass
-                    #     elif len(a_i) != 0:
-                    #         if a_i.strip().endswith('.'):
-                    #             a_i = a_i[:-1]
-                    #         a_i = a_i.replace('\n', '')
-                    #         a_i = a_i.strip()
-                    #         # print('a_i "', a_i, '"', len(a_i))
-                    #         if a_i.endswith('.'):
-                    #             a_i = a_i[:-1]
-                    #         a_i = a_i.strip()
-                    #         if len(a_i) != 0:
-                    #             new_l.append(float(a_i))
-                    # print("new_l", new_l)
-                    # # new_list =
-                    # row_d[key] = new_l
-
-
-
+                    # print("type(a_l) = %s a_l = %s" % (type(a_l), a_l))
                     row_d[key] = np.array(a_l)
-                    # if key == "state_begin":
-                    #     exit()
     return row_d
 
 

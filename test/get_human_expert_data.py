@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from ludopy import make_img_of_board
-from ludopy.visualizer import draw_basic_board
+from ludopy.visualizer import draw_basic_board, draw_moment
 from DQN_plays import get_game_state, get_state_after_action_g, get_reshaped_ann_input
 from rewards import get_reward
 import config
@@ -39,9 +39,15 @@ def show_start_board():
     plt.pause(0.005)
     time.sleep(0.01)
 
+def make_img_of_board(pieces, dice, players_dice, round_number):
+    board = draw_basic_board()
+    draw_moment(board, (pieces, dice, players_dice, round_number))
+    return board
+
 
 def show_board(g):
-    board_img = make_img_of_board(*g.hist[-1])
+    # board_img = make_img_of_board(*g.hist[-1])
+    board_img = make_img_of_board(pieces=g.get_pieces()[0], dice=g.current_dice, players_dice=g.current_player, round_number=g.round)
     plt.imshow(board_img, interpolation='nearest')
     plt.tight_layout()
     plt.draw()

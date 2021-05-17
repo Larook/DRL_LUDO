@@ -345,5 +345,8 @@ evaluating after 2 human games -> still 22% winrate against random player which 
 But this is the raw 2 games played so far - play another game
 
 getting_human_data:
-    make it faster by saving only the last np.history in RAM - 
+    make it faster by accessing the recent np.history in RAM - done. Need testing 
+
+evaluating only HUMAN after 3 games -> still 21% winrate in 100 games
+
 
