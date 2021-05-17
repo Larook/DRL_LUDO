@@ -339,3 +339,11 @@ record more games
 Piece release might be wrong!!!
 
 fix rewards problem!!! Loosing pieces - doesnt work 100% but cant find where is the error
+
+
+evaluating after 2 human games -> still 22% winrate against random player which is really bad
+But this is the raw 2 games played so far - play another game
+
+getting_human_data:
+    make it faster by saving only the last np.history in RAM - 
+

@@ -51,9 +51,9 @@ def optimize_model(dice, pieces_player_begin, batch, target_net, available_actio
 
     for i in range(batchLen):
         obs = batch[i]
-        s_ = obs[3]
+        state_new = obs[3]
         GAMMA = 0.95
-        t = predicted_q[i] + GAMMA * get_max_reward_from_state(pieces_player_begin, dice, s_, available_actions)  # target
+        t = predicted_q[i] + GAMMA * get_max_reward_from_state(pieces_player_begin, dice, state_new, available_actions)  # target
         x[i] = ann_inputs[i]  # state
         y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
@@ -97,7 +97,8 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
             epoch_last = 99
 
         if use_pretrained:
-            checkpoint = torch.load('results/models/pretrained_human_data_13_21_26_epochs.pth')
+            # checkpoint = torch.load('results/models/pretrained_human_data_13_21_26_epochs.pth')
+            checkpoint = torch.load('results/models/pretrained_human_data_16_13_25_epochs.pth')
             epoch_last = 1
 
         q_net.load_state_dict(checkpoint)
@@ -133,7 +134,7 @@ def dqn_approach(do_random_walk, load_model, train, use_pretrained, use_gpu):
 
     epochs = 1000
     if not train:
-        # for evaluation of model just play 100 times
+        # for evaluation of model just play 200 times
         epochs = 200
     steps_done = 0
 

@@ -145,7 +145,7 @@ def get_expert_data():
     print("Saving history to numpy file")
     g.save_hist("game_history.npy")
     print("Saving game video")
-    g.save_hist_video("randomwalk_game_video.mp4")
+    g.save_hist_video("human_play_video.mp4")
 
     return True
 

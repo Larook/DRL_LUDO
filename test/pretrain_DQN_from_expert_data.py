@@ -24,13 +24,15 @@ import config
 import json
 import ast
 
+
 def get_fixed_row_from_str(row_d):
     """ problem is that csv is saved as string - need to get list from the string """
     for key in row_d:
         print(key, '->', type(row_d[key]), row_d[key])
 
         if key == 'reward':
-            row_d[key] = float(row_d[key].strip('()').split(',')[0])
+            row_d[key] = float(row_d[key])
+            # row_d[key] = float(row_d[key].strip('()').split(',')[0])
             print("type(row_d[key]) = ", type(row_d[key]), "row_d[key] ", row_d[key])
             # exit("check reward")
 
@@ -95,7 +97,9 @@ def pretrain_model(q_net, data):
         print("obs", obs)
         ann_inputs.append(obs['ann_input'])
         # reward = float(obs['reward'].strip('()').split(',')[0])
-        reward = float(obs['reward'][0])
+        print("obs['reward']", obs['reward'])
+        reward = float(obs['reward'])
+        # reward = float(obs['reward'][0])
         calculated_rewards.append(reward)
 
     ann_inputs = torch.tensor(ann_inputs).float()
