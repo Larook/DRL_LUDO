@@ -349,4 +349,9 @@ getting_human_data:
 
 evaluating only HUMAN after 3 games -> still 21% winrate in 100 games
 
-
+now try to train on the pretrained model!
+- after 3 games the training winrate was again 21%
+Maybe because the first game recorded was lost?
+  Try to evaluate the 296 trained epochs with 3 games - performance 19%
+  
+and add more preplayed games
