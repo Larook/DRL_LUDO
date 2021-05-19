@@ -112,7 +112,7 @@ def get_expert_data():
                                   'state_begin': begin_state,
                                   'action': piece_to_move,
                                   'state_new': new_state,
-                                  'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move),
+                                  'ann_input': get_reshaped_ann_input(begin_state, new_state, piece_to_move, pieces_player_begin, dice),
                                   }
                     expert_data_l.append(round_info)
                     """ have to run this function:  

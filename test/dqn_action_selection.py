@@ -19,7 +19,7 @@ def take_best_action(pieces_player_begin, dice, move_pieces, begin_state, q_net)
 
         # print("<timing> get_state_after_action =", time.time() - before_new_state_t)
 
-        input_ann = get_reshaped_ann_input(begin_state, new_state, possible_action)
+        input_ann = get_reshaped_ann_input(begin_state, new_state, possible_action, pieces_player_begin, dice)
         input_ann = torch.FloatTensor(input_ann)
 
         # TODO: check if no_grad() is needed

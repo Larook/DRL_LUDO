@@ -40,7 +40,7 @@ def optimize_model(dice, pieces_player_begin, batch, target_net, available_actio
     # get the ANN inputs from batch
     ann_inputs, calculated_rewards = [], []
     for obs in batch:
-        ann_inputs.append(get_reshaped_ann_input(begin_state=obs[0], new_state=obs[3], action=obs[1]))
+        ann_inputs.append(get_reshaped_ann_input(begin_state=obs[0], new_state=obs[3], action=obs[1], pieces_player_begin=pieces_player_begin, dice=dice))
         calculated_rewards.append(obs[2])
 
     ann_inputs = torch.tensor(ann_inputs).float()
@@ -52,7 +52,7 @@ def optimize_model(dice, pieces_player_begin, batch, target_net, available_actio
     for i in range(batchLen):
         obs = batch[i]
         state_new = obs[3]
-        GAMMA = 0.95
+        GAMMA = 0.95  # learning rate
         t = predicted_q[i] + GAMMA * get_max_reward_from_state(pieces_player_begin, dice, state_new, available_actions)  # target
         x[i] = ann_inputs[i]  # state
         y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
@@ -100,7 +100,9 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
         if start_with_human_model:
             # checkpoint = torch.load('results/models/pretrained_human_data_13_21_26_epochs.pth')
             # checkpoint = torch.load('results/models/pretrained_human_data_16_13_25_epochs.pth')
-            checkpoint = torch.load('results/models/pretrained_human_data_17_22_44_epochs.pth')
+            # checkpoint = torch.load('results/models/pretrained_human_data_17_22_44_epochs.pth')
+            # checkpoint = torch.load('results/models/pretrained_human_data_19_22_53_epochs_new_ann_input.pth')
+            checkpoint = torch.load('results/models/pretrained_human_data_19_23_5_epochs_new_ann_input.pth')
             epoch_last = 1
 
         q_net.load_state_dict(checkpoint)
@@ -306,7 +308,7 @@ if __name__ == '__main__':
     # dqn_approach(do_random_walk=False, load_model=False, train=True, start_with_human_model=False, use_gpu=False)
 
     # training from pretrained
-    # dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
 
     # evaluation (pretrained after training!)
-    dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)
