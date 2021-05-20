@@ -1,5 +1,21 @@
+import math
+
 from Learning_Info import Learning_Info
 
+def get_epsilon_greedy(steps_done):
+    """ when 1200 batch size then the net starts to be trained after epoch 12 """
+    # steps_per_10_games = 3380
+    EPS_START = 0.9
+    EPS_END = 0.05
+    EPS_DECAY = 10000  # after 10 games eps_threshold=0.053
+
+    steps_training_starts_after_1200_batches = 5100
+    if steps_done <= steps_training_starts_after_1200_batches:
+        eps_threshold = EPS_START
+    else:
+        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.4 * (steps_done-steps_training_starts_after_1200_batches) / EPS_DECAY)
+    # old         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.7 * steps_done / EPS_DECAY)
+    return eps_threshold
 
 def init_rewards_couter_dict():
     return {'piece_release': 0, 'defend_vulnerable': 0, 'knock_opponent': 0,

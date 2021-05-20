@@ -18,7 +18,7 @@ if __name__ == "__main__":
                'moved_on_safe_globe', 'speed_boost_star',
                'defend_vulnerable', 'getting_piece_knocked_next_turn'],
             figsize=(30, 10), ax=axes[1])
-    winr = df.plot( y=['winrate', 'epsilon_now'], figsize=(30, 10), ax=axes[2])
+    winr = df.plot( y=['winrate', 'epsilon_now'], figsize=(30, 10), ax=axes[2], xlim=[0, 100])
     # winr.hlines(0.25, axes.get_xticks().min(), axes.get_xticks().max(), linestyle='--', color='pink')
     winr.hlines(0.25, winr.get_xticks().min(), winr.get_xticks().max(), linestyle='--', color='pink')
     df.plot(y=['epoch_no'], figsize=(30, 10), ax=axes[3])

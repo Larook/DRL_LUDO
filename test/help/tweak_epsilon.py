@@ -1,23 +1,22 @@
 import math
 import random
+import sys
 
 from matplotlib import pyplot as plt
-
+sys.path.append('../')
+import config
 
 
 def plot_epsilon_over_epochs():
     steps_per_10_games = 3380
-    EPS_START = 0.9
-    EPS_END = 0.05
-    # EPS_DECAY = 1000  # after 10 games eps_threshold=0.0789
-    EPS_DECAY = 10000  # after 10 games eps_threshold=0.053
-    # EPS_DECAY = 18000  # after 10 games eps_threshold=0.754 -> after 100 games: 0.17999013613686377 and reaches EPS_END after 1000 plays
+    games_played = 101
 
-    games_played = 100
     steps_done = games_played * steps_per_10_games / 10
+    print("steps_done", steps_done)
     ys = []
     for steps_done in list(range(int(steps_done))):
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.7 * steps_done / EPS_DECAY)
+        eps_threshold = config.get_epsilon_greedy(steps_done)
+        # eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.7 * steps_done / EPS_DECAY)
         ys.append(eps_threshold)
 
 
@@ -27,10 +26,10 @@ def plot_epsilon_over_epochs():
     plt.axvline(x=steps_per_10_games * 5, color='b', label='axvline - full height')
 
     print("after 10 games: epsilon_now=", ys[steps_per_10_games * 1])
-    print("after 20 games: epsilon_now=", ys[steps_per_10_games * 2])
-    print("after 30 games: epsilon_now=", ys[steps_per_10_games * 3])
-    print("after 40 games: epsilon_now=", ys[steps_per_10_games * 4])
-    print("after 50 games: epsilon_now=", ys[steps_per_10_games * 5])
+    # print("after 20 games: epsilon_now=", ys[steps_per_10_games * 2])
+    # print("after 30 games: epsilon_now=", ys[steps_per_10_games * 3])
+    # print("after 40 games: epsilon_now=", ys[steps_per_10_games * 4])
+    print("after 100 games: epsilon_now=", ys[steps_per_10_games * 10])
 
     plt.show()
 
@@ -60,5 +59,5 @@ def check_epsilon():
 
 
 if __name__ == "__main__":
-    # plot_epsilon_over_epochs()
-    check_epsilon()
+    plot_epsilon_over_epochs()
+    # check_epsilon()
