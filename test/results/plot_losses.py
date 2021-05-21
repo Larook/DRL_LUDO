@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-    df = pd.read_csv('learning_info_data_process.csv')
+    df = pd.read_csv('learning_info_data_process.csv')  # last running info
 
     fig, axes = plt.subplots(nrows=4, ncols=1)
     plt.title('batch = ??,  epochs = ??')
@@ -22,8 +22,6 @@ if __name__ == "__main__":
     # winr.hlines(0.25, axes.get_xticks().min(), axes.get_xticks().max(), linestyle='--', color='pink')
     winr.hlines(0.25, winr.get_xticks().min(), winr.get_xticks().max(), linestyle='--', color='pink')
     df.plot(y=['epoch_no'], figsize=(30, 10), ax=axes[3], xlim=[0, len(df)])
-
-
 
     # plt.savefig("20_04.jpg")
     plt.show()

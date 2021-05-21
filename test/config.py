@@ -2,6 +2,18 @@ import math
 
 from Learning_Info import Learning_Info
 
+
+""" tiles of the map """
+home_tile = 0
+finished_tile = 59
+
+safe_corridor = [54, 55, 56, 57, 58, 59]
+
+globe_tiles = [9, 14, 22, 35, 48]
+star_tiles = [5, 12, 18, 25, 31, 38, 44, 51]
+
+
+
 def get_epsilon_greedy(steps_done):
     """ when 1200 batch size then the net starts to be trained after epoch 12 """
     # steps_per_10_games = 3380
@@ -17,6 +29,7 @@ def get_epsilon_greedy(steps_done):
     # old         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.7 * steps_done / EPS_DECAY)
     return eps_threshold
 
+
 def init_rewards_couter_dict():
     return {'piece_release': 0, 'defend_vulnerable': 0, 'knock_opponent': 0,
                     'move_closest_goal': 0, 'move_closest_safe': 0, 'forming_blockade': 0,
@@ -28,42 +41,39 @@ def init_rewards_couter_dict():
 
 def init_start_state():
     start_state = [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
- [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
- [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
- [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,]]
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+                 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+                 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+                 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,]]
     return start_state
 
 
-learning_info_data = Learning_Info()
+""" training the net """
+# batch_size = 1200
+batch_size = 12
+epochs = 200
+GAMMA = 0.95  # discount
 
+network_sync_counter = 0
+network_sync_freq = 100
+learning_rate_mlp = 5e-3
+loss_avg_running_list = []
+
+learning_info_data = Learning_Info()
 last_turn_state_new = init_start_state()
 
+steps_done = 0
 epsilon_now = 0
 rewards_detected = init_rewards_couter_dict()
 
-""" tiles of the map """
-home_tile = 0
-finished_tile = 59
-
-safe_corridor = [54, 55, 56, 57, 58, 59]
-
-globe_tiles = [9, 14, 22, 35, 48]
-star_tiles = [5, 12, 18, 25, 31, 38, 44, 51]
-
-""" training the net """
-GAMMA = 0.95  # discount
-
-learning_rate_mlp = 5e-3
-
-# human network pretrain
+""" human network pretrain """
 losses_pretrain = []
 epochs_pretrain = 200
 pretrain_batch_size = 50

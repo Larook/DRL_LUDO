@@ -79,6 +79,63 @@ def rewards_detected_reset():
     config.rewards_detected = config.init_rewards_couter_dict()
 
 
+def dqn_agent_action_selection(
+                                player_i,
+                                pieces_player_begin,
+                                state_begin,
+                                dice,
+                                move_pieces,
+                                q_net,
+                                target_net,
+                                memory,
+                                BATCH_SIZE,
+                                train,
+                                load_model,
+                                rewards_accumulated
+                               ):
+
+    action, state_new = action_selection(pieces_player_begin=pieces_player_begin, dice=dice,
+                                         move_pieces=move_pieces, q_net=q_net, state_begin=state_begin,
+                                         steps_done=config.steps_done, is_random=False, show=False,
+                                         exploit_model=not(train))
+
+    reward = get_reward(dice=dice, state_begin=state_begin, piece_to_move=action, state_new=state_new,
+                        pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
+    if reward < -0.6:
+        print('ENEMY ENDED THE GAME, reward = ', reward)
+    if reward >= 0.7:
+        print('AI PLAYER ENDED THE GAME , reward', reward)
+
+    # save round observation to the memory
+    memory.add((state_begin, action, reward, state_new))
+
+    """ perform one step of optimization with random batch from memory == TRAIN network """
+    # if not use_model:
+    if train or not load_model:
+
+        """ prepeare training data """
+        batch = memory.sample(memory.capacity)
+        if len(batch) >= BATCH_SIZE:  # doesnt train when not enough samples in memory
+
+            """ synchronise the networks if needed """
+            if (config.network_sync_counter == config.network_sync_freq):
+                # update the q_net with the state of the trained target_net
+                q_net.load_state_dict(target_net.state_dict())
+                q_net.eval()
+
+                print("<....>synchronising the networks!!! ")
+                config.network_sync_counter = 0
+
+            loss_avg = optimize_model(dice=dice, pieces_player_begin=pieces_player_begin, batch=batch,
+                                      target_net=target_net, available_actions=move_pieces)
+            config.loss_avg_running_list.append(loss_avg)
+            config.network_sync_counter += 1
+    # print("<timing> t_optimize_model =", time.time()-t_optimize_model)
+    rewards_accumulated.append(reward)
+
+    return action, state_new, rewards_accumulated
+
+
 def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_gpu):
 
     ai_agents = [0]  # which id of player should be played by ai?
@@ -114,6 +171,7 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             epoch_last = 1
 
         q_net.load_state_dict(checkpoint)
+        q_net.eval()
     else:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
         q_net.eval()
@@ -123,17 +181,12 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
     """ target_net - this target network is used to generate target values or ground truth. 
     The weights of this network are held fixed for a fixed number of training steps after which these are updated with the weight of Main Network. 
     In this way, the distribution of our target return is also held fixed for some fixed iterations which increase training stability. """
-    if train:
-        target_net = copy.deepcopy(q_net)
-        target_net.train()
+    target_net = copy.deepcopy(q_net)
+    target_net.train()
 
-
-    """ synchronising of networks update """
-    network_sync_freq = 100
-    network_sync_counter = 0
 
     # BATCH_SIZE = 600  # first try
-    BATCH_SIZE = 1200  # second try overnight
+    BATCH_SIZE = config.batch_size  # second try overnight
     if do_random_walk:
         BATCH_SIZE = 10000  # 1000
 
@@ -142,19 +195,19 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
     # counter info
     won_counter = 0
     time_epochs = []
-    rewards_info = []
+    rewards_accumulated = []
     avg_time_epoch = 0
     avg_time_left = 0
     loss_avg = 0
 
-    epochs = 1000
+    epochs = config.epochs
     if not train:
         # for evaluation of model just play 200 times
         print('evaluation mode')
         epochs = 200
     else:
         print('training mode')
-    steps_done = 0
+    config.steps_done = 0
 
     if load_model:
         epochs_elapsed = range(epoch_last, epochs)
@@ -174,7 +227,11 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             time_turn_start = time.time()
 
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
+
+            # debug purposes only
             a_observation = {"player_i": player_i, "dice": dice, "move_pieces": move_pieces, "player_pieces": player_pieces, "enemy_pieces": enemy_pieces, "player_is_a_winner": player_is_a_winner, "there_is_a_winner": there_is_a_winner}
+
+            # move enemy pieces
             if player_i not in ai_agents:
 
                 if len(move_pieces) > 0:
@@ -193,49 +250,25 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
                 # print("pieces_player_begin", pieces_player_begin)
 
                 state_begin = get_game_state(pieces_on_board)
-                if steps_done == 0:
+                if config.steps_done == 0:
                     config.last_turn_state_new = state_begin
 
-                action, state_new = action_selection(pieces_player_begin=pieces_player_begin, dice=dice,
-                                                     move_pieces=move_pieces, q_net=q_net, state_begin=state_begin,
-                                                     steps_done=steps_done, is_random=False, show=False,
-                       exploit_model=not(train))
+                action, state_new, rewards_accumulated = dqn_agent_action_selection(
+                                                                            player_i=player_i,
+                                                                            pieces_player_begin=pieces_player_begin,
+                                                                            state_begin=state_begin,
+                                                                            dice=dice,
+                                                                            move_pieces=move_pieces,
+                                                                            q_net=q_net,
+                                                                            target_net=target_net,
+                                                                            memory=memory,
 
-                reward = get_reward(dice=dice, state_begin=state_begin, piece_to_move=action, state_new=state_new, pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
-                if reward < -0.6:
-                    print('ENEMY ENDED THE GAME, reward = ', reward)
-                if reward >= 0.7:
-                    print('AI PLAYER ENDED THE GAME , reward', reward)
+                                                                            BATCH_SIZE=BATCH_SIZE,
+                                                                            train=train,
+                                                                            load_model=load_model,
 
-                # save round observation to the memory
-                memory.add((state_begin, action, reward, state_new))
-
-                """ perform one step of optimization with random batch from memory == TRAIN network """
-                # if not use_model:
-                if train or not load_model:
-
-                    """ prepeare training data """
-                    batch = memory.sample(memory.capacity)
-                    if len(batch) >= BATCH_SIZE:  # doesnt train when not enough samples in memory
-
-                        """ synchronise the networks if needed """
-                        if (network_sync_counter == network_sync_freq):
-                            # update the q_net with the state of the trained target_net
-                            q_net.load_state_dict(target_net.state_dict())
-                            q_net.eval()
-
-                            # before it was wrong!!!
-                            # target_net.load_state_dict(q_net.state_dict())
-                            # target_net.train()
-
-                            print("<....>synchronising the networks!!! ")
-                            # exit(1)
-                            network_sync_counter = 0
-
-                        loss_avg = optimize_model(dice=dice, pieces_player_begin=pieces_player_begin, batch=batch, target_net=target_net, available_actions=move_pieces)
-                        network_sync_counter += 1
-                # print("<timing> t_optimize_model =", time.time()-t_optimize_model)
-                rewards_info.append(reward)
+                                                                            rewards_accumulated=rewards_accumulated
+                                                                            )
 
                 if player_i in ai_agents:
                     # if any(count_pieces_on_tile(player_no=player_id, state=state_new, tile_no=59) == 4 for player_id in range(0,4)):
@@ -255,13 +288,13 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
                     #     exit("works! trying to reduce time of get_state_after_action()")
 
 
-            steps_done += 1
+            config.steps_done += 1
             if player_i in ai_agents:
-                avg_reward = np.array(rewards_info).mean()
+                avg_reward = np.array(rewards_accumulated).mean()
                 config.learning_info_data.update(epoch_no=epoch, round_no=g.round, epochs_won=won_counter, ai_player_i=player_i,
-                                          action_no=steps_done, begin_state=state_begin, dice_now=dice, action=action,
-                                          new_state=state_new, reward=reward, avg_reward=avg_reward, loss=loss_avg,
-                                          rewards_info=config.rewards_detected, epsilon_now=config.epsilon_now)
+                                                 action_no=config.steps_done, begin_state=state_begin, dice_now=dice, action=action,
+                                                 new_state=state_new, reward=reward, avg_reward=avg_reward, loss=loss_avg,
+                                                 rewards_occurrences=config.rewards_detected, epsilon_now=config.epsilon_now)
 
             time_turn_end = time.time()
             time_turns.append(time_turn_end - time_turn_start)
@@ -271,7 +304,7 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
                 print("epoch = %d | round = %d <avg_time_left = %.2f avg_time_epoch = %.2f | avg_time_turn = %.2f> "
                       "| won_counter = %d | steps_done = %d | action = %d | avg_reward = %f, loss_avg = %f "
                       "| epsilon = %f" % (epoch, g.round, avg_time_left, avg_time_epoch, avg_time_turn, won_counter,
-                                          steps_done, action, avg_reward, loss_avg, config.epsilon_now))
+                                          config.steps_done, action, avg_reward, loss_avg, config.epsilon_now))
         time_epoch_end = time.time()
         time_epochs.append(time_epoch_end-time_epoch_start)
         avg_time_epoch = np.mean(time_epochs)
@@ -283,13 +316,13 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
         config.learning_info_data.save_to_csv(csv_name + '.csv', epoch_no=epoch)
         config.learning_info_data.save_plot_progress(bath_size=BATCH_SIZE, epoch_no=epoch, is_random_walk=do_random_walk)
 
-        if epoch % 3 == 0 and train:
+        if epoch % 4 == 0 and train:
             print("saving ann model")
             torch.save(q_net.state_dict(), 'results/models/running/model_test_'+str(epoch)+"_epochs.pth")
 
-        if (won_counter % 10 == 0 and won_counter > 0 and not train) or (won_counter % 2 == 0 and won_counter > 0 and train):
-            g.save_hist("results/videos_history/game_history.npy")
-            g.save_hist_video("results/videos_history/game_ANN_last_win_3_won.mp4")
+        # if (won_counter % 10 == 0 and won_counter > 0 and not train) or (won_counter % 2 == 0 and won_counter > 0 and train):
+        #     g.save_hist("results/videos_history/game_history.npy")
+        #     g.save_hist_video("results/videos_history/game_ANN_last_win_3_won.mp4")
 
         # restart the game after each epoch
         ai_player_seen_end = False
@@ -309,19 +342,18 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
         torch.save(q_net.state_dict(), 'results/models/running/model_final.pth')
     print("Saving history to numpy file")
     g.save_hist("results/videos_history/game_history.npy")
-    print("Saving game video")
-    g.save_hist_video("results/videos_history/game_ANN_test.mp4")
+    # print("Saving game video")
+    # g.save_hist_video("results/videos_history/game_ANN_test.mp4")
 
 
 if __name__ == '__main__':
-    # unittest.main()
     # dqn_approach(do_random_walk=False, load_model=False, train=True, use_gpu=False)
 
     # training from scratch
     # dqn_approach(do_random_walk=False, load_model=False, train=True, start_with_human_model=False, use_gpu=False)
 
     # training from pretrained
-    # dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
 
     # evaluation (pretrained after training!)
-    dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)

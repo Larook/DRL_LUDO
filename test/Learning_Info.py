@@ -11,7 +11,7 @@ class Learning_Info():
         self.rewards_each_epoch = []
 
     def update(self, epoch_no, round_no, epochs_won, action_no, ai_player_i, begin_state, dice_now, action, new_state,
-               reward, avg_reward, loss, rewards_info, epsilon_now):
+               reward, avg_reward, loss, rewards_occurrences, epsilon_now):
         avg_reward_this_epoch = 0
         self.rewards_each_epoch.append(reward)
         winrate = epochs_won/epoch_no
@@ -22,17 +22,17 @@ class Learning_Info():
                                 'action': action, 'new_state': new_state, 'reward': reward, 'avg_reward': avg_reward,
                                 'avg_reward_this_epoch': np.array(self.rewards_each_epoch).mean(),
                                 'loss': loss,
-                                'piece_release': rewards_info['piece_release'],
-                                'knock_opponent': rewards_info['knock_opponent'],
-                                'move_closest_goal': rewards_info['move_closest_goal'],
-                                'move_closest_safe': rewards_info['move_closest_safe'],
-                                'forming_blockade': rewards_info['forming_blockade'],
-                                'defend_vulnerable': rewards_info['defend_vulnerable'],
-                                'getting_piece_knocked_next_turn': rewards_info['getting_piece_knocked_next_turn'],
-                                'moved_on_safe_globe': rewards_info['moved_on_safe_globe'],
-                                'speed_boost_star': rewards_info['speed_boost_star'],
-                                'ai_agent_won': rewards_info['ai_agent_won'],
-                                'ai_agent_lost': rewards_info['ai_agent_lost'],
+                                'piece_release': rewards_occurrences['piece_release'],
+                                'knock_opponent': rewards_occurrences['knock_opponent'],
+                                'move_closest_goal': rewards_occurrences['move_closest_goal'],
+                                'move_closest_safe': rewards_occurrences['move_closest_safe'],
+                                'forming_blockade': rewards_occurrences['forming_blockade'],
+                                'defend_vulnerable': rewards_occurrences['defend_vulnerable'],
+                                'getting_piece_knocked_next_turn': rewards_occurrences['getting_piece_knocked_next_turn'],
+                                'moved_on_safe_globe': rewards_occurrences['moved_on_safe_globe'],
+                                'speed_boost_star': rewards_occurrences['speed_boost_star'],
+                                'ai_agent_won': rewards_occurrences['ai_agent_won'],
+                                'ai_agent_lost': rewards_occurrences['ai_agent_lost'],
                                 'epsilon_now': epsilon_now
                                 })
 
