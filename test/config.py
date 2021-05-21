@@ -25,7 +25,8 @@ def get_epsilon_greedy(steps_done):
     if steps_done <= steps_training_starts_after_1200_batches:
         eps_threshold = EPS_START
     else:
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.4 * (steps_done-steps_training_starts_after_1200_batches) / EPS_DECAY)
+        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-0.6 * (steps_done-steps_training_starts_after_1200_batches) / EPS_DECAY)  # platou after 200 games
+        # eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.4 * (steps_done-steps_training_starts_after_1200_batches) / EPS_DECAY)  # platou after 100 games
     # old         eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1.7 * steps_done / EPS_DECAY)
     return eps_threshold
 
@@ -62,8 +63,9 @@ epochs = 200
 GAMMA = 0.95  # discount
 
 network_sync_counter = 0
-network_sync_freq = 100
-learning_rate_mlp = 5e-3
+network_sync_freq = 500
+# learning_rate_mlp = 5e-3
+learning_rate_mlp = 1e-2  # bigger one
 loss_avg_running_list = []
 
 learning_info_data = Learning_Info()

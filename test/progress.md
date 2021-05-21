@@ -392,5 +392,11 @@ now after fixing the previous bugs the model can be trained again with correctly
 
 it had 16/71 = 0.225352 winrate but I realized that avg loss isnt plotted
 
+the training model was 31/170= 18.2% which was still decreasing as unlearning
+
+changed platou of epsilon to be after 200 games
+changed network_sync_freq from 100 to 500 now
+changed learning rate from 5e-3 to 1e-2
+
 
 
