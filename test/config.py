@@ -62,3 +62,10 @@ star_tiles = [5, 12, 18, 25, 31, 38, 44, 51]
 GAMMA = 0.95  # discount
 
 learning_rate_mlp = 5e-3
+
+# human network pretrain
+losses_pretrain = []
+epochs_pretrain = 200
+pretrain_batch_size = 50
+learning_rate_pretrain = 0.1  # big one
+

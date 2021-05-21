@@ -106,21 +106,27 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             # checkpoint = torch.load('results/models/pretrained_human_data_16_13_25_epochs.pth')
             # checkpoint = torch.load('results/models/pretrained_human_data_17_22_44_epochs.pth')
             # checkpoint = torch.load('results/models/pretrained_human_data_19_22_53_epochs_new_ann_input.pth')
-            checkpoint = torch.load('results/models/pretrained_human_data_19_23_5_epochs_new_ann_input.pth')
+            # checkpoint = torch.load('results/models/pretrained_human_data_19_23_5_epochs_new_ann_input.pth')
+
+            # after fixing the networks update frequency
+            checkpoint = torch.load('results/models/pretrained_human_epochs200_lr0.1__21_15_37.pth')
             print("will use human pretrained data")
             epoch_last = 1
 
         q_net.load_state_dict(checkpoint)
     else:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
+        q_net.eval()
     if not train:
         epoch_last = 1
-        q_net.eval()
 
     """ target_net - this target network is used to generate target values or ground truth. 
     The weights of this network are held fixed for a fixed number of training steps after which these are updated with the weight of Main Network. 
     In this way, the distribution of our target return is also held fixed for some fixed iterations which increase training stability. """
-    target_net = copy.deepcopy(q_net)
+    if train:
+        target_net = copy.deepcopy(q_net)
+        target_net.train()
+
 
     """ synchronising of networks update """
     network_sync_freq = 100
@@ -158,7 +164,6 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
     for epoch in epochs_elapsed:
         time_turns = []
         time_epoch_start = time.time()
-        avg_time_turn = 0
 
         """ main game loop """
         ai_player_seen_end = False
@@ -174,8 +179,6 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
 
                 if len(move_pieces) > 0:
                     action = perform_random_action(move_pieces)
-                    # pieces_on_board = g.get_pieces()[0]
-                    # action = perform_semismart_aggressive(player_i, pieces_on_board, dice, move_pieces, player_pieces, enemy_pieces)
                 else:
                     action = -1
 
@@ -189,29 +192,20 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
                 pieces_player_begin = pieces_on_board[player_i]
                 # print("pieces_player_begin", pieces_player_begin)
 
-                t_get_game_state = time.time()
                 state_begin = get_game_state(pieces_on_board)
                 if steps_done == 0:
                     config.last_turn_state_new = state_begin
-                # print("<timing> t_get_game_state =", time.time()-t_get_game_state)
-
-                t_action_selection = time.time()
-                # action, state_new = action_selection_g(g, move_pieces, q_net, state_begin, steps_done,
-                #                                        is_random=do_random_walk, show=False, exploit_model=not (train))
 
                 action, state_new = action_selection(pieces_player_begin=pieces_player_begin, dice=dice,
                                                      move_pieces=move_pieces, q_net=q_net, state_begin=state_begin,
                                                      steps_done=steps_done, is_random=False, show=False,
                        exploit_model=not(train))
-                # print("<timing> t_action_selection =", time.time()-t_action_selection)
 
-                t_get_reward = time.time()
                 reward = get_reward(dice=dice, state_begin=state_begin, piece_to_move=action, state_new=state_new, pieces_player_begin=pieces_player_begin, actual_action=True)  # immediate reward
                 if reward < -0.6:
                     print('ENEMY ENDED THE GAME, reward = ', reward)
                 if reward >= 0.7:
                     print('AI PLAYER ENDED THE GAME , reward', reward)
-                # print("<timing> t_get_reward =", time.time()-t_get_reward)
 
                 # save round observation to the memory
                 memory.add((state_begin, action, reward, state_new))
@@ -226,12 +220,18 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
 
                         """ synchronise the networks if needed """
                         if (network_sync_counter == network_sync_freq):
-                            target_net.load_state_dict(q_net.state_dict())
+                            # update the q_net with the state of the trained target_net
+                            q_net.load_state_dict(target_net.state_dict())
+                            q_net.eval()
+
+                            # before it was wrong!!!
+                            # target_net.load_state_dict(q_net.state_dict())
+                            # target_net.train()
+
                             print("<....>synchronising the networks!!! ")
                             # exit(1)
                             network_sync_counter = 0
 
-                        t_optimize_model = time.time()
                         loss_avg = optimize_model(dice=dice, pieces_player_begin=pieces_player_begin, batch=batch, target_net=target_net, available_actions=move_pieces)
                         network_sync_counter += 1
                 # print("<timing> t_optimize_model =", time.time()-t_optimize_model)

@@ -374,3 +374,23 @@ epoch = 199 | round = 73 <avg_time_left = 2.18 avg_time_epoch = 1.09 | avg_time_
 winrate = 18%
 
 then evalueate model playing with enemy players controlled by pretrained neural network
+
+
+    fixed the networks - now loads the correct state
+
+Pretrained again the initial human data network
+    # human network pretrain
+    epochs_pretrain = 200
+    pretrain_batch_size = 50
+    learning_rate_pretrain = 0.1  # big one
+
+    saved the plots from training
+    
+and evaluated the winrate after 200 games -> it won 45 thus the winrate was 22.5%
+
+now after fixing the previous bugs the model can be trained again with correctly pretrained network
+
+
+
+
+
