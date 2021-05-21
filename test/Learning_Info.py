@@ -49,13 +49,16 @@ class Learning_Info():
             title = "randW_" + title
         plt.title(title)
 
-        self.data_df.plot(y=['loss', 'avg_reward', 'avg_reward_this_epoch'], figsize=(30, 10), ax=axes[0])
-        self.data_df.plot(y=['piece_release', 'knock_opponent', 'move_closest_goal', 'move_closest_safe', 'forming_blockade',
-                   'defend_vulnerable', 'getting_piece_knocked_next_turn', 'ai_agent_won', 'ai_agent_lost'], figsize=(30, 10), ax=axes[1])
-        winr = self.data_df.plot(y=['winrate', 'epsilon_now'], figsize=(30, 10), ax=axes[2])
+        len_df = len(self.data_df)
 
+        self.data_df.plot(y=['loss', 'avg_reward', 'avg_reward_this_epoch'], figsize=(30, 10), ax=axes[0],  xlim=[0, len_df])
+        self.data_df.plot(y=['piece_release', 'knock_opponent', 'move_closest_goal', 'move_closest_safe', 'forming_blockade',
+                   'defend_vulnerable', 'getting_piece_knocked_next_turn', 'ai_agent_won', 'ai_agent_lost'],
+                          figsize=(30, 10), ax=axes[1],  xlim=[0, len_df])
+        winr = self.data_df.plot(y=['winrate', 'epsilon_now'], figsize=(30, 10), ax=axes[2],  xlim=[0, len_df])
         winr.hlines(0.25, winr.get_xticks().min(), winr.get_xticks().max(), linestyle='--', color='pink')
-        self.data_df.plot(y=['epoch_no'], figsize=(30, 10), ax=axes[3])
+
+        self.data_df.plot(y=['epoch_no'], figsize=(30, 10), ax=axes[3],  xlim=[0, len_df])
 
         plt.savefig("results/plots/" + title + ".jpg")
 

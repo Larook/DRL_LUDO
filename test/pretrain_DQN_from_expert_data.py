@@ -55,7 +55,7 @@ def get_fixed_row_from_str(row_d):
 
 
 def pretrain_model(q_net, data):
-    batch_size = 100
+    batch_size = 50
     # batch_size = 10  # try only 10 in batch
     # batch = data.sample(batch_size)
     random.shuffle(data)
@@ -96,7 +96,7 @@ def pretrain_model(q_net, data):
             y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
         """ train the ann https://medium.com/deep-learning-study-notes/multi-layer-perceptron-mlp-in-pytorch-21ea46d50e62 """
-        optimizer = torch.optim.Adam(q_net.parameters())  # Optimizers help the model find the minimum.
+        optimizer = torch.optim.Adam(q_net.parameters(), lr=0.1)  # Optimizers help the model find the minimum.
         losses_this_action = []
         for i in range(batch_size):
             output = q_net(x[i])

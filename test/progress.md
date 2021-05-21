@@ -366,3 +366,11 @@ now the correct pretraining - actually using the whole dataset - the winrate now
 actually it is 20% winrate with pretrained net
 epoch = 100 | round = 89 <avg_time_left = 113.80 avg_time_epoch = 1.13 | avg_time_turn = 0.00> | won_counter = 20 | steps_done = 38218 | action = 1 | avg_reward = 0.078642, loss_avg = 0.000000 | epsilon = 0.051282
 Hopefully trained MLP now will give better results
+
+trained mlp on 282 epochs - need to fix plots
+
+Evaluate model playing with random player
+epoch = 199 | round = 73 <avg_time_left = 2.18 avg_time_epoch = 1.09 | avg_time_turn = 0.00> | won_counter = 36 | steps_done = 73636 | action = 0 | avg_reward = 0.078152, loss_avg = 0.000000 | epsilon = 0.050058
+winrate = 18%
+
+then evalueate model playing with enemy players controlled by pretrained neural network

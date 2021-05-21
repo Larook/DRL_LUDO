@@ -18,6 +18,7 @@ from Learning_Info import Learning_Info
 from dqn_action_selection import *
 
 import config
+from enemy_behaviour_types import *
 
 
 def get_pawn_id_from_tile(tile_id, player_pieces):
@@ -58,7 +59,7 @@ def optimize_model(dice, pieces_player_begin, batch, target_net, available_actio
         y[i] = t.detach().numpy()  # target - estimation of the Q(s,a) - if estimation is good -> close to the Q*(s,a)
 
     """ train the ann https://medium.com/deep-learning-study-notes/multi-layer-perceptron-mlp-in-pytorch-21ea46d50e62 """
-    optimizer = torch.optim.Adam(target_net.parameters())  # Optimizers help the model find the minimum.
+    optimizer = torch.optim.Adam(target_net.parameters(), lr= config.learning_rate_mlp)  # Optimizers help the model find the minimum.
     losses_this_action = []
     for i in range(batchLen):
         output = target_net(x[i])
@@ -94,8 +95,11 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             # checkpoint = torch.load('results/models/model_test_21_epochs_all_rewards.pth')
             # checkpoint = torch.load('results/models/model_test_99_epochs_batch_600.pth')
             # checkpoint = torch.load('results/models/model_final_epochs100_batch1200.pth')
-            checkpoint = torch.load('results/models/model_test_294_epochs_batch1200_games3.pth')
-            epoch_last = 99
+            # checkpoint = torch.load('results/models/model_test_294_epochs_batch1200_games3.pth')
+            checkpoint = torch.load('results/models/model_test_282_epochs_4pretrained_new_ann_input.pth')
+
+            print("will use the trained model")
+            epoch_last = 282
 
         if start_with_human_model:
             # checkpoint = torch.load('results/models/pretrained_human_data_13_21_26_epochs.pth')
@@ -103,6 +107,7 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             # checkpoint = torch.load('results/models/pretrained_human_data_17_22_44_epochs.pth')
             # checkpoint = torch.load('results/models/pretrained_human_data_19_22_53_epochs_new_ann_input.pth')
             checkpoint = torch.load('results/models/pretrained_human_data_19_23_5_epochs_new_ann_input.pth')
+            print("will use human pretrained data")
             epoch_last = 1
 
         q_net.load_state_dict(checkpoint)
@@ -139,7 +144,10 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
     epochs = 1000
     if not train:
         # for evaluation of model just play 200 times
+        print('evaluation mode')
         epochs = 200
+    else:
+        print('training mode')
     steps_done = 0
 
     if load_model:
@@ -161,13 +169,18 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             time_turn_start = time.time()
 
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
-
+            a_observation = {"player_i": player_i, "dice": dice, "move_pieces": move_pieces, "player_pieces": player_pieces, "enemy_pieces": enemy_pieces, "player_is_a_winner": player_is_a_winner, "there_is_a_winner": there_is_a_winner}
             if player_i not in ai_agents:
+
                 if len(move_pieces) > 0:
-                    action = move_pieces[np.random.randint(0, len(move_pieces))]  # randomly moves a pawn
+                    action = perform_random_action(move_pieces)
+                    # pieces_on_board = g.get_pieces()[0]
+                    # action = perform_semismart_aggressive(player_i, pieces_on_board, dice, move_pieces, player_pieces, enemy_pieces)
                 else:
                     action = -1
+
                 state_new = get_state_after_action_g(g, action)
+
             else:
                 """ select an action of AI player """
                 # pieces = g.get_pieces()
@@ -233,7 +246,7 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
 
             """ perform action and end round """
             _, _, _, _, player_is_a_winner, there_is_a_winner = g.answer_observation(action)
-            if config.rewards_detected['ai_agent_won'] >0 :
+            if config.rewards_detected['ai_agent_won'] > 0:
                 if player_i in ai_agents:
                     won_counter += 1
                     print("<!!!> player_ai won!! won_counter=", won_counter)
@@ -308,7 +321,7 @@ if __name__ == '__main__':
     # dqn_approach(do_random_walk=False, load_model=False, train=True, start_with_human_model=False, use_gpu=False)
 
     # training from pretrained
-    dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
 
     # evaluation (pretrained after training!)
-    # dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)

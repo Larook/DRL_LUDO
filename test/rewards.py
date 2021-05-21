@@ -24,7 +24,7 @@ def map_enemy_tile_id_to_player_0(i_enemy, tile_id):
 
 
 def get_max_reward_from_state(pieces_player_begin, dice, state_begin, possible_actions):
-    """ need to check all the movable pieces, and calculate all the possible rewards and get the maximum one"""
+    """ need to check all the movable pieces, and calculate all the possible rewards and get the maximum one """
     from DQN_plays import get_state_after_action_g
 
     max_reward = 0

@@ -48,9 +48,6 @@ def action_selection(pieces_player_begin, dice, move_pieces, q_net, state_begin,
     """
     """ !!! check help/tweak_epsilon.py """
 
-    # EPS_START = 0.9
-    # EPS_END = 0.05
-    # EPS_DECAY = 10000  # after 10 games eps_threshold=0.053
 
     if len(move_pieces):
         # epsilon greedy
