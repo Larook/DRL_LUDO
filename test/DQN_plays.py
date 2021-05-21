@@ -93,7 +93,7 @@ def dqn_agent_action_selection(
                                 load_model,
                                 rewards_accumulated
                                ):
-
+    loss_avg = 0
     action, state_new = action_selection(pieces_player_begin=pieces_player_begin, dice=dice,
                                          move_pieces=move_pieces, q_net=q_net, state_begin=state_begin,
                                          steps_done=config.steps_done, is_random=False, show=False,
@@ -133,7 +133,7 @@ def dqn_agent_action_selection(
     # print("<timing> t_optimize_model =", time.time()-t_optimize_model)
     rewards_accumulated.append(reward)
 
-    return action, state_new, rewards_accumulated
+    return action, state_new, reward, rewards_accumulated, loss_avg
 
 
 def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_gpu):
@@ -231,14 +231,15 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             # debug purposes only
             a_observation = {"player_i": player_i, "dice": dice, "move_pieces": move_pieces, "player_pieces": player_pieces, "enemy_pieces": enemy_pieces, "player_is_a_winner": player_is_a_winner, "there_is_a_winner": there_is_a_winner}
 
-            # move enemy pieces
             if player_i not in ai_agents:
-
+                """ enemy move """
                 if len(move_pieces) > 0:
                     action = perform_random_action(move_pieces)
                 else:
                     action = -1
 
+                # state_begin = get_game_state(g.get_pieces()[0])
+                # state_new = get_state_after_action(pieces_player_begin, state_begin, dice, action)
                 state_new = get_state_after_action_g(g, action)
 
             else:
@@ -253,7 +254,7 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
                 if config.steps_done == 0:
                     config.last_turn_state_new = state_begin
 
-                action, state_new, rewards_accumulated = dqn_agent_action_selection(
+                action, state_new, reward, rewards_accumulated, loss_avg = dqn_agent_action_selection(
                                                                             player_i=player_i,
                                                                             pieces_player_begin=pieces_player_begin,
                                                                             state_begin=state_begin,
@@ -269,6 +270,7 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
 
                                                                             rewards_accumulated=rewards_accumulated
                                                                             )
+                # reward = rewards_accumulated[-1]
 
                 if player_i in ai_agents:
                     # if any(count_pieces_on_tile(player_no=player_id, state=state_new, tile_no=59) == 4 for player_id in range(0,4)):

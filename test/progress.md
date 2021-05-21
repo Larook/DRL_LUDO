@@ -390,7 +390,7 @@ and evaluated the winrate after 200 games -> it won 45 thus the winrate was 22.5
 
 now after fixing the previous bugs the model can be trained again with correctly pretrained network
 
-
+it had 16/71 = 0.225352 winrate but I realized that avg loss isnt plotted
 
 
 
