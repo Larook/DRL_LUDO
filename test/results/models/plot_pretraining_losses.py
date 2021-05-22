@@ -9,8 +9,9 @@ if __name__ == "__main__":
     # plt.title('Pretraining of the MLP, epochs = 200, batch_size = 50, learning_rate = 0.1')
     # plt.xlabel('observations')
     # plt.ylabel('MSE')
+    df.columns = [0, 'pretraining loss']
 
-    df.plot(y=df.columns[1], figsize=(30, 10), xlim=[0, len(df)])
+    df.plot(y=df.columns[1], figsize=(6, 2), xlim=[0, len(df)], lw=0.03)
 
 
     # plt.savefig("20_04.jpg")
