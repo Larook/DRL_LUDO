@@ -45,9 +45,9 @@ class Learning_Info():
 
         fig, axes = plt.subplots(nrows=4, ncols=1)
         title = "batch = " + str(bath_size) + ", epochs = " + str(epoch_no)
-        if is_random_walk:
-            title = "randW_" + title
-        plt.title(title)
+        # if is_random_walk:
+        #     title = "randW_" + title
+        # plt.title(title)
 
         len_df = len(self.data_df)
 

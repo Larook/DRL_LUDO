@@ -399,4 +399,7 @@ changed network_sync_freq from 100 to 500 now
 changed learning rate from 5e-3 to 1e-2
 
 
+when training - 52/249 = 0.208 winrate
+
+
 

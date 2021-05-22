@@ -59,7 +59,7 @@ def init_start_state():
 """ training the net """
 batch_size = 1200
 # batch_size = 100
-epochs = 200
+epochs = 250
 GAMMA = 0.95  # discount
 
 network_sync_counter = 0

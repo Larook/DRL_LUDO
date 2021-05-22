@@ -6,7 +6,7 @@ if __name__ == "__main__":
     df = pd.read_csv('learning_info_data_process.csv')  # last running info
 
     fig, axes = plt.subplots(nrows=4, ncols=1)
-    plt.title('batch = ??,  epochs = ??')
+    # plt.title('batch = ??,  epochs = ??')
 
     df.plot( y=['loss', 'avg_reward', 'avg_reward_this_epoch'], figsize=(30, 10), ax=axes[0], xlim=[0, len(df)])
     # plt.xlabel('x-axis label')

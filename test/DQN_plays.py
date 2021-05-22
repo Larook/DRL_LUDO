@@ -153,7 +153,8 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
             # checkpoint = torch.load('results/models/model_test_99_epochs_batch_600.pth')
             # checkpoint = torch.load('results/models/model_final_epochs100_batch1200.pth')
             # checkpoint = torch.load('results/models/model_test_294_epochs_batch1200_games3.pth')
-            checkpoint = torch.load('results/models/model_test_282_epochs_4pretrained_new_ann_input.pth')
+            # checkpoint = torch.load('results/models/model_test_282_epochs_4pretrained_new_ann_input.pth')
+            checkpoint = torch.load('results/models/model_final_training_new_params.pth')
 
             print("will use the trained model")
             epoch_last = 282
