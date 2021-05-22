@@ -201,14 +201,15 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
     avg_time_left = 0
     loss_avg = 0
 
-    epochs = config.epochs
+    epochs = config.epochs + 1
     if not train:
         # for evaluation of model just play 200 times
         print('evaluation mode')
-        epochs = 200
+        epochs = config.epochs_evaluate
     else:
         print('training mode')
     config.steps_done = 0
+    time.sleep(1)
 
     if load_model:
         epochs_elapsed = range(epoch_last, epochs)
@@ -356,7 +357,7 @@ if __name__ == '__main__':
     # dqn_approach(do_random_walk=False, load_model=False, train=True, start_with_human_model=False, use_gpu=False)
 
     # training from pretrained
-    dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
+    # dqn_approach(do_random_walk=False, load_model=True, train=True, start_with_human_model=True, use_gpu=False)
 
     # evaluation (pretrained after training!)
-    # dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)
+    dqn_approach(do_random_walk=False, load_model=True, train=False, start_with_human_model=False, use_gpu=False)

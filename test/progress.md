@@ -400,6 +400,8 @@ changed learning rate from 5e-3 to 1e-2
 
 
 when training - 52/249 = 0.208 winrate
-
+evaluating: 49/199 -> 0.2412
+another evaluating 73/299
+which gives 122/498 -> 0.2449 but when 122/500 then winrate=0.244
 
 
