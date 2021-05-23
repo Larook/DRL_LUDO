@@ -405,3 +405,12 @@ another evaluating 73/299
 which gives 122/498 -> 0.2449 but when 122/500 then winrate=0.244
 
 
+playing vs Nathan's Q learning -> his agent has 54% against 3 random players
+so all of the other random players have 15.3%
+for now winrate is 22/169=13%
+
+tbh showing the correct winrate doesnt work...
+
+epoch = 315 | round = 63 <avg_time_left = 375.42 avg_time_epoch = 2.02 | avg_time_turn = 0.16> | won_counter = 28 | steps_done = 114818 | action = 2 | avg_reward = 0.074843, loss_avg = 0.000000 | epsilon = 0.051176
+players_win_counter =  {0: 172, 1: 61, 2: 231, 3: 63}     Nathan_won_counter 231
+

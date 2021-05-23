@@ -82,5 +82,5 @@ pretrain_batch_size = 50
 learning_rate_pretrain = 0.1  # big one
 
 """ evaluation """
-epochs_evaluate = 300
+epochs_evaluate = 500
 

@@ -19,6 +19,7 @@ from dqn_action_selection import *
 
 import config
 from enemy_behaviour_types import *
+from Nathan import *
 
 
 def get_pawn_id_from_tile(tile_id, player_pieces):
