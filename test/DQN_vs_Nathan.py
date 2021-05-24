@@ -1,3 +1,5 @@
+import pandas as pd
+
 from DQN_plays import *
 from Nathan.Qlearn import *
 # from Nathan.Qlearn import Qplayer
@@ -92,18 +94,23 @@ def dqn_competition_vs_Nathan(do_random_walk, load_model, train, start_with_huma
     Nathan_won_counter = 0
 
 
-    for epoch in epochs_elapsed:
+    for epoch in range(1, config.epochs_evaluate+1):
         time_turns = []
         time_epoch_start = time.time()
 
         """ main game loop """
         ai_player_seen_end = False
+        there_is_a_winner = False
         config.last_turn_state_new = config.init_start_state()
         reward = 0
 
+        if train:
+            end_condition = ai_player_seen_end
+        else:
+            end_condition = there_is_a_winner
 
-
-        while not ai_player_seen_end:
+        while not end_condition:
+            end_condition = there_is_a_winner
             time_turn_start = time.time()
 
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
@@ -171,14 +178,12 @@ def dqn_competition_vs_Nathan(do_random_walk, load_model, train, start_with_huma
 
             """ save information which player won """
             if there_is_a_winner:
-
                 if player_is_a_winner:
                     if player_i == playerNathan:
                         Nathan_won_counter += 1
-
                 if player_is_a_winner:
                     players_win_counter[player_i] += 1
-                    # players_win_list.append()
+                    players_win_list.append(players_win_counter)
 
 
             if config.rewards_detected['ai_agent_won'] > 0:
@@ -211,6 +216,11 @@ def dqn_competition_vs_Nathan(do_random_walk, load_model, train, start_with_huma
                                           config.steps_done, action, avg_reward, loss_avg, config.epsilon_now))
                 print("players_win_counter = ", players_win_counter, "    Nathan_won_counter", Nathan_won_counter)
 
+            if len(players_win_list):
+                df_wins = pd.DataFrame(players_win_list)
+                df_wins.columns = ["player_0_DRL", "player_1_random", "player_2_Qlearning", "player_3_random"]
+                df_wins.to_csv("results/PLAYERS_WON_COUNTER_FINAL_EVALUATION.csv")
+
         time_epoch_end = time.time()
         time_epochs.append(time_epoch_end-time_epoch_start)
         avg_time_epoch = np.mean(time_epochs)
@@ -229,9 +239,6 @@ def dqn_competition_vs_Nathan(do_random_walk, load_model, train, start_with_huma
         # if (won_counter % 10 == 0 and won_counter > 0 and not train) or (won_counter % 2 == 0 and won_counter > 0 and train):
         #     g.save_hist("results/videos_history/game_history.npy")
         #     g.save_hist_video("results/videos_history/game_ANN_last_win_3_won.mp4")
-
-
-
 
         # restart the game after each epoch
         ai_player_seen_end = False
@@ -254,8 +261,15 @@ def dqn_competition_vs_Nathan(do_random_walk, load_model, train, start_with_huma
     # print("Saving game video")
     # g.save_hist_video("results/videos_history/game_ANN_test.mp4")
 
+    return players_win_list
+
 
 
 if __name__ == '__main__':
 
-    dqn_competition_vs_Nathan(do_random_walk=False, load_model=True, train=False, start_with_human_model=True, use_gpu=False)
+    players_win_list = dqn_competition_vs_Nathan(do_random_walk=False, load_model=True, train=False, start_with_human_model=True, use_gpu=False)
+
+    # # save results to csv!
+    # df_wins = pd.DataFrame(players_win_list)
+    # df_wins.columns = ["player_0_DRL", "player_1_random", "player_2_Qlearning", "player_3_random"]
+    # df_wins.to_csv("results/PLAYERS_WON_COUNTER_FINAL_EVALUATION.csv")

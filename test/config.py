@@ -77,10 +77,12 @@ rewards_detected = init_rewards_couter_dict()
 
 """ human network pretrain """
 losses_pretrain = []
-epochs_pretrain = 200
+# epochs_pretrain = 200
+epochs_pretrain = 1000
 pretrain_batch_size = 50
 learning_rate_pretrain = 0.1  # big one
 
 """ evaluation """
 epochs_evaluate = 500
+# epochs_evaluate = 5
 

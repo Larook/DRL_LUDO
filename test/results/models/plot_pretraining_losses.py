@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-    df = pd.read_csv('pretrained_losses_epochs200_lr0.1__21_15_37.csv', index_col=False)
+    # df = pd.read_csv('pretrained_losses_epochs200_lr0.1__21_15_37.csv', index_col=False)
+    df = pd.read_csv('pretrained_losses_epochs1000_lr0.1__23_15_40.csv', index_col=False)
     # df = df.reset_index(drop=True, inplace=True)
     # df = df.drop(df.columns[0], axis=1, inplace=True)
     # plt.title('Pretraining of the MLP, epochs = 200, batch_size = 50, learning_rate = 0.1')

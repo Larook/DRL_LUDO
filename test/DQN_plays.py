@@ -142,8 +142,10 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
     ai_agents = [0]  # which id of player should be played by ai?
     g = ludopy.Game()
 
-    # load/create model of ANN
+    players_win_counter = {0: 0, 1: 0, 2: 0, 3: 0}
+    players_win_list = []
 
+    # load/create model of ANN
     """ q_net - network to get the Q of the current state """
     if load_model:
         q_net = Feedforward(try_cuda=use_gpu, input_size=242, hidden_size=21)
@@ -223,13 +225,21 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
 
         """ main game loop """
         ai_player_seen_end = False
+        there_is_a_winner = False
         config.last_turn_state_new = config.init_start_state()
         reward = 0
+        if train:
+            end_condition = ai_player_seen_end
+        else:
+            end_condition = there_is_a_winner
 
-        while not ai_player_seen_end:
+        while not end_condition:
             time_turn_start = time.time()
 
             (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
+            if not train:
+                end_condition = there_is_a_winner
+
 
             # debug purposes only
             a_observation = {"player_i": player_i, "dice": dice, "move_pieces": move_pieces, "player_pieces": player_pieces, "enemy_pieces": enemy_pieces, "player_is_a_winner": player_is_a_winner, "there_is_a_winner": there_is_a_winner}
@@ -291,7 +301,16 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
                     ai_player_seen_end = True
                     # if do_random_walk:
                     #     exit("works! trying to reduce time of get_state_after_action()")
+            """ save information which player won """
+            if there_is_a_winner:
+                if player_is_a_winner:
+                    players_win_counter[player_i] += 1
+                    players_win_list.append(players_win_counter)
 
+                    if len(players_win_list):
+                        df_wins = pd.DataFrame(players_win_list)
+                        df_wins.columns = ["player_0_DRL", "player_1_random", "player_2_random", "player_3_random"]
+                        df_wins.to_csv("results/DRL_agent_win_list_with_random_players.csv")
 
             config.steps_done += 1
             if player_i in ai_agents:
@@ -310,6 +329,10 @@ def dqn_approach(do_random_walk, load_model, train, start_with_human_model, use_
                       "| won_counter = %d | steps_done = %d | action = %d | avg_reward = %f, loss_avg = %f "
                       "| epsilon = %f" % (epoch, g.round, avg_time_left, avg_time_epoch, avg_time_turn, won_counter,
                                           config.steps_done, action, avg_reward, loss_avg, config.epsilon_now))
+                print("players_win_counter = ", players_win_counter)
+
+
+
         time_epoch_end = time.time()
         time_epochs.append(time_epoch_end-time_epoch_start)
         avg_time_epoch = np.mean(time_epochs)

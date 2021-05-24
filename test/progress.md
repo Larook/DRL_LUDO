@@ -414,3 +414,21 @@ tbh showing the correct winrate doesnt work...
 epoch = 315 | round = 63 <avg_time_left = 375.42 avg_time_epoch = 2.02 | avg_time_turn = 0.16> | won_counter = 28 | steps_done = 114818 | action = 2 | avg_reward = 0.074843, loss_avg = 0.000000 | epsilon = 0.051176
 players_win_counter =  {0: 172, 1: 61, 2: 231, 3: 63}     Nathan_won_counter 231
 
+28/315 = 8.88 %   - DRL
+
+epoch = 393 | round = 55 <avg_time_left = 129.98 avg_time_epoch = 1.20 | avg_time_turn = 0.08> | won_counter = 55 | steps_done = 140105 | action = 2 | avg_reward = 0.085973, loss_avg = 0.000000 | epsilon = 0.050258
+players_win_counter =  {0: 68, 1: 49, 2: 231, 3: 44}     Nathan_won_counter 231
+
+Process finished with exit code 137 (interrupted by signal 9: SIGKILL)
+
+epoch = 344 | round = 90 <avg_time_left = 294.68 avg_time_epoch = 1.88 | avg_time_turn = 0.12> | won_counter = 52 | steps_done = 124023 | action = 1 | avg_reward = 0.084659, loss_avg = 0.000000 | epsilon = 0.050677
+players_win_counter =  {0: 65, 1: 56, 2: 226, 3: 58}     Nathan_won_counter 226
+
+DRL - 65/405 -0.16049382716049382
+random1 - 56/405 - 0.1382716049382716
+Q-learning - 226/405 - 0.5580246913580247
+random2 = 58/405 - 0.14320987654320988
+
+
+
+
